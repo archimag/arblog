@@ -1,0 +1,37 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.view}
+
+{template base}
+<!DOCTYPE html>{\n}
+ <html>
+     <head>
+         <title>{$title}</title>
+     </head>
+
+     <body>
+         <div id="content">
+             {$content |noAutoescape}
+         </div>
+     </body>
+ </html>
+{/template}
+
+{template show-blog-post}
+    <div class="blog-post">
+        <h3>{$title}</h3>
+
+        {$content |noAutoescape}
+    </div>
+{/template}
+
+{template show-all-blog-post}
+    {call base}
+        {param title: 'archimag' /}
+        {param content}
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}
+{/template}
