@@ -1,0 +1,34 @@
+/* style.css */
+
+body { width: 50em; margin: 0 auto; font-family: Georgia,serif; font-size: 1em; line-height: 1.4em; }
+
+h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; }
+.blog-post > h2:first-letter { color: red; font-size: 200%; /*color: #06515F;*/ color: #2f7108;}
+.blog-post > h2 a { text-decoration: none; color: #434343;}
+
+.blog-post { text-align: justify;  }
+.blog-post h2 { margin: 2em 0 0 1em; }
+
+.post-metadata { text-align: right; margin-bottom: 0.5em; }
+.post-metadata a { text-decoration: none; color: #06515F; font-size: 1.2em;}
+.post-metadata a:hover { color: #6F4706; }
+
+#header {margin: 2em;}
+#archimag { font-weight: bold; font-size: 2em; text-decoration: none; color: #44900d; }
+
+pre, .code {
+    background-color: #F9FFFF;
+    border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5;
+    margin: 1em 0.2em; padding: 0.5em;
+    font-family: "Courier New", monospace; font-size: 90%;
+    overflow: auto;
+}
+
+#footer { margin: 2em 0; color: #767676; }
+#footer a { color: #767676; }
+#footer a:hover { color: #6F4706; }
+
+.feed {
+    padding: 0 0 0 19px;
+    background: url("../image/feed-icon-14x14.png") no-repeat 0 50%;
+}

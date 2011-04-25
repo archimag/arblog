@@ -7,11 +7,52 @@
  <html>
      <head>
          <title>{$title}</title>
+         <link  rel="stylesheet" href="/css/style.css">
+
+         <link rel="alternate" type="application/atom+xml"
+               title="archimag: blog entries feed"
+               href="/feeds/atom" /> 
+         <link rel="alternate" type="application/rss+xml"
+               title="archimag: comments feed"
+               href="http://archimagblog.disqus.com/latest.rss" /> 
      </head>
 
      <body>
+         <a href="http://github.com/archimag/">
+             <img style="position: absolute; top: 0; left: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/5d21241b64dc708fcbb701f68f72f41e9f1fadd6/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67" alt="Fork me on GitHub">
+         </a>
+
+         <div id="header">
+             <a href="/" id="archimag">archimag</a>
+         </div>
+              
          <div id="content">
              {$content |noAutoescape}
+         </div>
+
+         <div id="footer">
+             <div style="float: right; text-align: right;">
+                 Copyright (c) Moskvitin Andrey <br />
+                 Powered by
+                 <a href="http://restas.lisper.ru">RESTAS</a>
+                 <br />
+
+                 <a href="http://www.sbcl.org/">
+                     <img src="http://www.sbcl.org/sbclbutton.png" alt="SBCL" />
+                 </a>
+
+                 <a href="http://weitz.de/hunchentoot/">
+                     <img src="http://www.htg1.de/hunchentoot/hunchentoot10.png" alt="Hunchentoot" />
+                 </a>
+
+                 <a href="http://www.mongodb.org/">
+                     <img src="http://media.mongodb.org/logo-mongoDB.png" alt="mongoDB" />
+                 </a>
+             </div>
+             
+             <a href="/feeds/atom" class="feed">Posts feed</a>
+             <br />
+             <a href="http://archimagblog.disqus.com/latest.rss" class="feed">Comments feed</a>
          </div>
      </body>
  </html>
@@ -19,10 +60,70 @@
 
 {template show-blog-post}
     <div class="blog-post">
-        <h3>{$title}</h3>
+        <h2><a href="{$href}">{$title}</a></h2>
+
+        <div class="post-metadata">
+            <div class="post-published">
+                <a href="{$published.year.href}">
+                    {$published.year.title}
+                </a>,
+
+                <a href="{$published.month.href}">
+                    {$published.month.title}
+                </a>
+
+                <a href="{$published.day.href}">
+                    {$published.day.title}
+                </a>
+            </div>
+
+            <div class="post-tags">
+                <a href="{$allTagsHref}">Tags</a>:
+                {foreach $tag in $tags}
+                    <a href="{$tag.href}">{$tag.name}</a>
+                {/foreach}
+            </div>
+        </div>
 
         {$content |noAutoescape}
     </div>
+{/template}
+
+{template show-one-post}
+    {call base}
+        {param title: $title /}
+        {param content}
+            {call show-blog-post data="all" /}
+
+            <div id="disqus_thread"></div>
+            <script type="text/javascript">
+     /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+     var disqus_shortname = 'archimagblog'; // required: replace example with your forum shortname
+     var disqus_developer = 1; 
+     /*var disqus_identifier = {$year}_{$month}_{$day}_{$title |id};*/
+
+    // The following are highly recommended additional parameters. Remove the slashes in front to use.
+    // var disqus_identifier = 'unique_dynamic_id_1234';
+    // var disqus_url = 'http://example.com/permalink-to-page.html';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+     {literal}
+     (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+     {/literal}
+                </script>
+            
+                <noscript>
+                    Please enable JavaScript to view the
+                    <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+                </noscript>
+                
+                <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+        {/param}
+    {/call}
 {/template}
 
 {template show-all-blog-post}
@@ -35,3 +136,55 @@
         {/param}
     {/call}
 {/template}
+
+{template archive-for-year}
+    {call base}
+        {param title}
+            {nil}archimag: {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$year}</h1>
+            
+            {foreach $month in $months}
+                <div>
+                    <a href="{$month.href}">Archive for {$month.title}, {$year}</a>
+                </div>
+            {/foreach}
+        {/param}
+    {/call}    
+    
+{/template}
+
+{template archive-for-month}
+    {call base}
+        {param title}
+            {nil}archimag: {$month}, {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}    
+{/template}
+
+{template archive-for-day}
+    {call base}
+        {param title}
+            {nil}archimag: {$day} {$month}, {$year}
+        {/param}
+        {param content}
+            <h1>Archive for {$day} {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}
+    
+{/template}
+
