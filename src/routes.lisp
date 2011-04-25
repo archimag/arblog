@@ -7,17 +7,78 @@
 (restas:mount-submodule -static- (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "static/" *basepath*)))
 
+(defmacro with-posts-collection (name &body body)
+  (let ((blog-symbol (gensym)))
+    `(mongo:with-database (,blog-symbol "blog")
+       (let ((,name (mongo:collection ,blog-symbol "posts")))
+         ,@body))))
+
+(defun url-with-skip (url skip)
+  (let ((parsed-url (puri:parse-uri url)))
+    (setf (puri:uri-query parsed-url)
+          (format nil "skip=~A" skip))
+    (puri:render-uri parsed-url nil)))
+
+(defun navigation (url skip total-count)
+  (list :older (if (< (+ skip *posts-on-page*) total-count)
+                   (url-with-skip url
+                                  (+ skip *posts-on-page*)))
+        :newer (cond
+                 ((= skip 0) nil)
+                 ((> (- skip *posts-on-page*) 0)
+                  (url-with-skip url (- skip *posts-on-page*)))
+                 (t url))))
+
 ;;;; main page
 
 (restas:define-route entry ("")
-  (mongo:with-database (blog "blog")
-    (list :list-posts-page
-          :posts (mongo:find-list (mongo:collection blog "posts")
-                                  :query (son "$query" (son) 
-                                              "$orderby" (son "published" -1))
-                                  :limit 10
-                                  :skip (or (ignore-errors (parse-integer (hunchentoot:get-parameter "skip")))
-                                            0)))))
+  (with-posts-collection posts
+    (let ((skip (or (ignore-errors (parse-integer (hunchentoot:get-parameter "skip"))) 0)))
+      (list :list-posts-page
+            :navigation (navigation (restas:genurl 'entry)
+                                    skip
+                                    (mongo:collection-count posts))
+            :posts (mongo:find-list posts
+                                    :query (son "$query" (son) 
+                                                "$orderby" (son "published" -1))
+                                    :limit *posts-on-page*
+                                    :skip skip)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; One post
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(restas:define-route one-post (":year/:month/:day/:title"
+                               :parse-vars (list :year #'parse-integer
+                                                 :month #'parse-integer
+                                                 :day #'parse-integer))
+  (let* ((min (local-time:encode-timestamp 0 0 0 0 day month year))
+         (max (local-time:adjust-timestamp min (offset :day 1))))
+    (mongo:with-database (blog "blog")  
+      (list :one-post-page
+            :post (mongo:find-one (mongo:collection blog "posts")
+                                  (son "published"
+                                       (son "$gte" min "$lt" max)
+                                       "title" title))))))
+
+(restas:define-route post-permalink ("permalink/posts/:id")
+  (let* ((info (mongo:with-database (blog "blog")
+                (mongo:find-one (mongo:collection blog "posts")
+                                (son "_id" id)
+                                (son "published" 1
+                                           "title" 1))))
+         (title (gethash "title" info))
+         (published (gethash "published" info)))
+    (restas:redirect 'one-post
+                     :year (local-time:timestamp-year published)
+                     :month (local-time:timestamp-month published)
+                     :day (local-time:timestamp-day published)
+                     :title title)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; archive
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
 (defun archive-post (min max &optional fields)
   (mongo:with-database (blog "blog")
@@ -64,26 +125,60 @@
           :day day
           :posts (archive-post min max))))
 
-(restas:define-route one-post (":year/:month/:day/:title"
-                               :parse-vars (list :year #'parse-integer
-                                                 :month #'parse-integer
-                                                 :day #'parse-integer))
-  (let* ((min (local-time:encode-timestamp 0 0 0 0 day month year))
-         (max (local-time:adjust-timestamp min (offset :day 1))))
-    (mongo:with-database (blog "blog")  
-      (list :one-post-page
-            :post (mongo:find-one (mongo:collection blog "posts")
-                                  (son "published"
-                                       (son "$gte" min "$lt" max)
-                                       "title" title))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Tags
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (restas:define-route all-tags ("tags/")
-  "Hello")
-
+  (with-posts-collection posts
+    (mongo:with-cursor (cursor posts (son) (son "tags" 1))
+      (let ((tags nil))
+        (mongo:docursor (item cursor)
+          (iter (for tag in (gethash "tags" item))
+                (pushnew tag tags :test #'string=)))
+        (list :tags-page
+              :tags tags)))))
+                 
 (restas:define-route posts-with-tag ("tags/:tag")
-  tag)
-  
-  
+  (let ((skip (or (ignore-errors (parse-integer (hunchentoot:get-parameter "skip"))) 0)))  
+    (with-posts-collection posts
+      (list :posts-with-tag-page
+            :tag tag
+            :navigation (navigation (restas:genurl 'posts-with-tag :tag tag)
+                                    skip
+                                    (mongo:collection-count posts
+                                                            (son "tags" tag)))
+            :posts (mongo:find-list posts
+                                    :query (son "$query" (son "tags" tag)
+                                                "$orderby" (son "published" -1))
+                                    :limit *posts-on-page*
+                                    :skip (or (ignore-errors (parse-integer (hunchentoot:get-parameter "skip")))
+                                              0))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Feeds
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(restas:define-route posts-feed ("feeds/atom"
+                                 :content-type "application/atom+xml")
+  (with-posts-collection posts
+    (list :atom-feed
+          :name "archimag"
+          :href-atom (restas:gen-full-url 'posts-feed)
+          :href-html (restas:gen-full-url 'entry)
+          :posts (mongo:find-list posts
+                                  :query (son "$query" (son) 
+                                              "$orderby" (son "published" -1))
+                                  :limit 50))))
 
-        
+(restas:define-route posts-with-tag-feed ("feeds/atom/tag/:tag"
+                                          :content-type "application/atom+xml")
+  (with-posts-collection posts
+    (list :atom-feed
+          :name (format nil "archimag blog posts with tag \"~A\"" tag)
+          :href-atom (restas:gen-full-url 'posts-feed)
+          :href-html (restas:gen-full-url 'entry)
+          :posts (mongo:find-list posts
+                                  :query (son "$query" (son "tags" tag) 
+                                              "$orderby" (son "published" -1))
+                                  :limit 50))))

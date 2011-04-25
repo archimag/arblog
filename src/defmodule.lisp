@@ -18,3 +18,10 @@
     (restas:context-add-variable context
                                  '*default-render-method*
                                  (make-instance 'drawer))))
+
+
+(defparameter *disqus-shortname* "archimagblog")
+
+(defparameter *disqus-developer-mode* t)
+
+(defparameter *posts-on-page* 10)

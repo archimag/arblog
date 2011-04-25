@@ -9,13 +9,6 @@
 (defmethod restas:render-object ((drawer drawer) (data list))
   (apply 'render-tagged-data (car data) (cdr data)))
 
-(defun format-time (date)
-  (format nil
-         "~D-~2,'0D-~2,'0D"
-         (local-time:timestamp-year date)
-         (local-time:timestamp-month date)
-         (local-time:timestamp-day date)))
-
 (defun archive-for-year-link (year)
   (list :title year
         :href (restas:genurl 'archive-for-year
@@ -42,8 +35,8 @@
     (list :title (gethash "title" post)
           :href (restas:genurl 'one-post
                                :year year
-                               :month month
-                               :day day
+                               :month (format nil "~2,'0D" month)
+                               :day (format nil "~2,'0D" day)
                                :title (gethash "title" post))
           :content (gethash "content" post)
           :all-tags-href (restas:genurl 'all-tags)
@@ -55,9 +48,10 @@
                            :month (archive-for-month-link year month)
                            :day (archive-for-day-link year month day)))))
 
-(defmethod render-tagged-data ((type (eql :list-posts-page)) &key posts)
+(defmethod render-tagged-data ((type (eql :list-posts-page)) &key posts navigation)
   (arblog.view:show-all-blog-post
-   (list :posts (mapcar 'prepare-post-data posts))))
+   (list :posts (mapcar 'prepare-post-data posts)
+         :navigation navigation)))
 
 (defmethod render-tagged-data ((type (eql :archive-for-year)) &key year months)
   (arblog.view:archive-for-year
@@ -78,5 +72,48 @@
          :month (svref local-time:+month-names+ month)
          :day day)))  
 
-(defmethod render-tagged-data ((type (eql :one-post-page)) &key post)
-  (arblog.view:show-one-post (prepare-post-data post)))
+(defmethod render-tagged-data ((type (eql :one-post-page)) &key post
+                               &aux (id (gethash "_id" post)))
+  (arblog.view:show-one-post (list* :disqus (list :shortname *disqus-shortname*
+                                                  :developer-mode *disqus-developer-mode*
+                                                  :identifier id
+                                                  :permalink (restas:gen-full-url 'post-permalink :id id))
+                                    (prepare-post-data post))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Tags
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod render-tagged-data ((type (eql :tags-page)) &key tags)
+  (arblog.view:tags-page
+   (list :tags
+         (iter (for tag in (sort (copy-list tags) #'string< :key #'string-downcase))
+               (collect (list :href (restas:genurl 'posts-with-tag
+                                                   :tag tag)
+                              :name tag))))))
+
+(defmethod render-tagged-data ((type (eql :posts-with-tag-page)) &key tag posts navigation)
+  (arblog.view:post-with-tag-page
+   (list :tag tag
+         :atom-feed-href (restas:genurl 'posts-with-tag-feed :tag tag)
+         :navigation navigation
+         :posts (mapcar 'prepare-post-data posts))))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Atom
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defmethod render-tagged-data ((type (eql :atom-feed)) &key name href-atom href-html posts)
+  (arblog.view:atom-feed
+   (list :name name
+         :href-atom href-atom
+         :href-html href-html
+         :posts (iter (for post in posts)
+                      (collect
+                          (list :id (gethash "_id" post)
+                                :title (gethash "title" post)
+                                :link (restas:genurl 'post-permalink :id (gethash "_id" post))
+                                :published (local-time:format-timestring nil (gethash "published" post))
+                                :updated (local-time:format-timestring nil (gethash "updated" post))
+                                :content (gethash "content" post)))))))

@@ -31,7 +31,7 @@
          </div>
 
          <div id="footer">
-             <div style="float: right; text-align: right;">
+             <div class="right">
                  Copyright (c) Moskvitin Andrey <br />
                  Powered by
                  <a href="http://restas.lisper.ru">RESTAS</a>
@@ -98,9 +98,12 @@
             <div id="disqus_thread"></div>
             <script type="text/javascript">
      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-     var disqus_shortname = 'archimagblog'; // required: replace example with your forum shortname
-     var disqus_developer = 1; 
-     /*var disqus_identifier = {$year}_{$month}_{$day}_{$title |id};*/
+     var disqus_shortname = "{$disqus.shortname}";
+     var disqus_identifier = "{$disqus.identifier}";
+     var disqus_url = "{$disqus.permalink}";
+     {if $disqus.developerMode}
+         var disqus_developer = 1;
+     {/if}
 
     // The following are highly recommended additional parameters. Remove the slashes in front to use.
     // var disqus_identifier = 'unique_dynamic_id_1234';
@@ -126,6 +129,28 @@
     {/call}
 {/template}
 
+{template navigation}
+    {if $newer or $older}
+        <table id="navigation" width="100%">
+            <tbody>
+                <tr>
+                    <td width="50%" align="left">
+                        {if $newer}
+                            <a href="{$newer}" class="left">← Newer posts</a>
+                        {/if}
+                    </td>
+
+                    <td width="50%" align="right">
+                        {if $older}
+                            <a href="{$older}">Older posts →</a>
+                        {/if}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    {/if}
+{/template}
+
 {template show-all-blog-post}
     {call base}
         {param title: 'archimag' /}
@@ -133,6 +158,8 @@
             {foreach $post in $posts}
                 {call show-blog-post data="$post" /}
             {/foreach}
+
+            {call navigation data="$navigation" /}
         {/param}
     {/call}
 {/template}
@@ -188,3 +215,62 @@
     
 {/template}
 
+
+{template tags-page}
+    {call base}
+        {param title: 'archimag: Tags' /}
+        {param content}
+            <h1>Tags</h1>
+
+            <div class="tag-cloud">
+                {foreach $tag in $tags}
+                    <a href="{$tag.href}">{$tag.name}</a>
+                {/foreach}
+            </div>
+        {/param}
+    {/call}
+{/template}
+
+{template post-with-tag-page}
+    {call base}
+        {param title: 'archimag: ' + $tag /}
+        {param content}
+            <h1><a href="{$atomFeedHref}">All articles, tagged with “{$tag}”</a></h1>
+
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+
+            {call navigation data="$navigation" /}
+        {/param}
+    {/call}
+{/template}
+
+/* Atom feed*/
+
+{template atom-feed}
+   {nil}
+   <?xml version="1.0" encoding="utf-8"?>
+   {\n}
+   <feed xmlns="http://www.w3.org/2005/Atom">
+       <title>{$name}</title>
+       <link rel="self" type="application/atom+xml" href="{$hrefAtom}" />
+       <link rel="alternate" type="text/html" href="{$hrefHtml}" />
+       <id>{$hrefAlternate}</id>
+
+       {foreach $entry in $posts}
+           <entry>
+               <title>{$entry.title ? $entry.title : '*notitle*'}</title>
+               <id>{$entry.id}</id>
+               <link href="{$entry.link}" />
+               <published>{$entry.published}</published>
+               {if $entry.updated}<updated>{$entry.updated}</updated>{/if}
+               <content type="html">{$entry.content}</content>
+               <author>
+                   <name>archimag</name>
+                   <uri>http://archimag.lisper.ru/</uri>
+               </author>
+           </entry>
+       {/foreach}
+   </feed>
+{/template}

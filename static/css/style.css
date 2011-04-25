@@ -1,10 +1,16 @@
 /* style.css */
 
-body { width: 50em; margin: 0 auto; font-family: Georgia,serif; font-size: 1em; line-height: 1.4em; }
+body { width: 55em; margin: 0 auto; font-family: Georgia,serif; font-size: 1em; line-height: 1.4em; text-align: justify;}
 
-h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; }
-.blog-post > h2:first-letter { color: red; font-size: 200%; /*color: #06515F;*/ color: #2f7108;}
+a { color: #06515F; }
+a:hover { color: #6F4706; }
+
+.right { float: right; text-align: right; }
+
+h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; font-weight: normal; }
+.blog-post > h2:first-letter { color: #a52a2a; font-size: 200%; /*color: #2f7108;*/ }
 .blog-post > h2 a { text-decoration: none; color: #434343;}
+.blog-post > h2 a:hover { color: #a52a2a; }
 
 .blog-post { text-align: justify;  }
 .blog-post h2 { margin: 2em 0 0 1em; }
@@ -14,7 +20,7 @@ h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; }
 .post-metadata a:hover { color: #6F4706; }
 
 #header {margin: 2em;}
-#archimag { font-weight: bold; font-size: 2em; text-decoration: none; color: #44900d; }
+#archimag { font-weight: bold; font-size: 2em; text-decoration: none; color: #458b00; }
 
 pre, .code {
     background-color: #F9FFFF;
@@ -32,3 +38,8 @@ pre, .code {
     padding: 0 0 0 19px;
     background: url("../image/feed-icon-14x14.png") no-repeat 0 50%;
 }
+
+
+.tag-cloud { font-size: 90%; word-spacing: 0.5em; line-height: 2em;}
+
+#navigation { margin: 2em 0; min-height: 1em;}

@@ -8,7 +8,13 @@
 (defparameter *xpath-entry-tags*
   "atom:category[@scheme='http://www.blogger.com/atom/ns#']/@term")
 
-(defun parse-atom-feed (path)
+(defun calc-sha1-id (title published)
+  (ironclad:byte-array-to-hex-string
+   (ironclad:digest-sequence
+    :sha1 (babel:string-to-octets (format nil "~A~A" title published)
+                                  :encoding :utf-8))))
+
+(defun import-from-atom-feed (path)
   (xtree:with-parse-document (feed path)
     (mongo:with-database (blog "blog")
       (let ((xpath:*default-ns-map* '(("atom" "http://www.w3.org/2005/Atom")
@@ -18,12 +24,17 @@
 
         (iter (for rawentry in-xpath-result *xpath-atom-entry*  on feed)
               (for entry = (son))
+              (for title = (xpath:find-string rawentry "atom:title"))
+              (for published = (local-time:parse-timestring (xpath:find-string rawentry "atom:published")))
+
+              (setf (gethash "_id" entry)
+                    (calc-sha1-id title published))
 
               (setf (gethash "title" entry)
-                    (xpath:find-string rawentry "atom:title"))
+                    title)
               
               (setf (gethash "published" entry)
-                    (local-time:parse-timestring (xpath:find-string rawentry "atom:published")))
+                    published)
 
               (setf (gethash "updated" entry)
                     (local-time:parse-timestring (xpath:find-string rawentry "atom:updated")))

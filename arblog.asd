@@ -1,7 +1,7 @@
 ;;;; arblog.asd
 
 (defsystem #:arblog
-  :depends-on (#:restas #:mongo-cl-driver #:closure-template)
+  :depends-on (#:restas #:mongo-cl-driver #:closure-template #:restas-directory-publisher #:ironclad)
   :components
   ((:module "src"
             :components
