@@ -9,9 +9,11 @@
 
 (defmacro with-posts-collection (name &body body)
   (let ((blog-symbol (gensym)))
-    `(mongo:with-database (,blog-symbol "blog")
-       (let ((,name (mongo:collection ,blog-symbol "posts")))
-         ,@body))))
+    `(let* ((,blog-symbol (apply 'make-instance 'mongo:database *dbspec*))
+            (,name (mongo:collection ,blog-symbol "posts")))
+       (unwind-protect
+            (progn ,@body)
+         (mongo:close-database ,blog-symbol)))))
 
 (defun url-with-skip (url skip)
   (let ((parsed-url (puri:parse-uri url)))
@@ -54,16 +56,16 @@
                                                  :day #'parse-integer))
   (let* ((min (local-time:encode-timestamp 0 0 0 0 day month year))
          (max (local-time:adjust-timestamp min (offset :day 1))))
-    (mongo:with-database (blog "blog")  
+    (with-posts-collection posts
       (list :one-post-page
-            :post (mongo:find-one (mongo:collection blog "posts")
+            :post (mongo:find-one posts
                                   (son "published"
                                        (son "$gte" min "$lt" max)
                                        "title" title))))))
 
 (restas:define-route post-permalink ("permalink/posts/:id")
-  (let* ((info (mongo:with-database (blog "blog")
-                (mongo:find-one (mongo:collection blog "posts")
+  (let* ((info (with-posts-collection posts
+                (mongo:find-one posts
                                 (son "_id" id)
                                 (son "published" 1
                                            "title" 1))))
@@ -81,8 +83,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
 (defun archive-post (min max &optional fields)
-  (mongo:with-database (blog "blog")
-    (mongo:find-list (mongo:collection blog "posts")
+  (with-posts-collection posts
+    (mongo:find-list posts
                      :query (son "$query" (son "published"
                                                (son "$gte" min "$lt" max))
                                  "$orderby" (son "published" -1))

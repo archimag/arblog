@@ -25,3 +25,5 @@
 (defparameter *disqus-developer-mode* t)
 
 (defparameter *posts-on-page* 10)
+
+(defparameter *dbspec* '(:name "blog"))
