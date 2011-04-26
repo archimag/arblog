@@ -29,6 +29,7 @@ h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; f
 #footer a:hover { color: #6F4706; }
 
 #buttons { padding: 1em; }
+#buttons a { text-decoration: none; }
 #buttons img { margin-left: 1em; vertical-align: middle;}
 
 .feed {
