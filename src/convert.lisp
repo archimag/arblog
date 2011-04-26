@@ -14,37 +14,36 @@
     :sha1 (babel:string-to-octets (format nil "~A~A" title published)
                                   :encoding :utf-8))))
 
-(defun import-from-atom-feed (path)
+(defun import-from-atom-feed (path blog)
   (xtree:with-parse-document (feed path)
-    (mongo:with-database (blog "blog")
-      (let ((xpath:*default-ns-map* '(("atom" "http://www.w3.org/2005/Atom")
-                                      ("thr" "http://purl.org/syndication/thread/1.0")
-                                      ("app" "http://purl.org/atom/app#")))
-            (posts (mongo:collection blog "posts")))
+    (let ((xpath:*default-ns-map* '(("atom" "http://www.w3.org/2005/Atom")
+                                    ("thr" "http://purl.org/syndication/thread/1.0")
+                                    ("app" "http://purl.org/atom/app#")))
+          (posts (mongo:collection blog "posts")))
 
-        (iter (for rawentry in-xpath-result *xpath-atom-entry*  on feed)
-              (for entry = (son))
-              (for title = (xpath:find-string rawentry "atom:title"))
-              (for published = (local-time:parse-timestring (xpath:find-string rawentry "atom:published")))
+      (iter (for rawentry in-xpath-result *xpath-atom-entry*  on feed)
+            (for entry = (son))
+            (for title = (xpath:find-string rawentry "atom:title"))
+            (for published = (local-time:parse-timestring (xpath:find-string rawentry "atom:published")))
 
-              (setf (gethash "_id" entry)
-                    (calc-sha1-id title published))
+            (setf (gethash "_id" entry)
+                  (calc-sha1-id title published))
 
-              (setf (gethash "title" entry)
-                    title)
-              
-              (setf (gethash "published" entry)
-                    published)
+            (setf (gethash "title" entry)
+                  title)
+            
+            (setf (gethash "published" entry)
+                  published)
 
-              (setf (gethash "updated" entry)
-                    (local-time:parse-timestring (xpath:find-string rawentry "atom:updated")))
+            (setf (gethash "updated" entry)
+                  (local-time:parse-timestring (xpath:find-string rawentry "atom:updated")))
 
-              (setf (gethash "content" entry)
-                    (xpath:find-string rawentry "atom:content"))
+            (setf (gethash "content" entry)
+                  (xpath:find-string rawentry "atom:content"))
 
-              (setf (gethash "tags" entry)
-                    (map 'vector 
-                         #'xtree:text-content
-                         (xpath:find-list rawentry *xpath-entry-tags*)))
+            (setf (gethash "tags" entry)
+                  (map 'vector 
+                       #'xtree:text-content
+                       (xpath:find-list rawentry *xpath-entry-tags*)))
 
-              (mongo:insert-op posts entry))))))
+            (mongo:insert-op posts entry)))))

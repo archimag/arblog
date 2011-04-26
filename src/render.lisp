@@ -24,8 +24,8 @@
   (list :title day
         :href (restas:genurl 'archive-for-day
                              :year year
-                             :month month
-                             :day day)))
+                             :month (format nil "~2,'0D" month)
+                             :day (format nil "~2,'0D" day))))
 
 (defun prepare-post-data (post)
   (let* ((published (gethash "published" post))
