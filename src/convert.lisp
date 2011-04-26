@@ -8,12 +8,6 @@
 (defparameter *xpath-entry-tags*
   "atom:category[@scheme='http://www.blogger.com/atom/ns#']/@term")
 
-(defun calc-sha1-id (title published)
-  (ironclad:byte-array-to-hex-string
-   (ironclad:digest-sequence
-    :sha1 (babel:string-to-octets (format nil "~A~A" title published)
-                                  :encoding :utf-8))))
-
 (defun import-from-atom-feed (path blog)
   (xtree:with-parse-document (feed path)
     (let ((xpath:*default-ns-map* '(("atom" "http://www.w3.org/2005/Atom")

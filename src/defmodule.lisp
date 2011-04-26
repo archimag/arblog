@@ -1,7 +1,8 @@
 ;;;; defmodule.lisp
 
 (restas:define-module #:arblog
-  (:use #:cl #:iter #:son-sugar))
+  (:use #:cl #:iter #:son-sugar)
+  (:import-from #:docutils.parser.rst #:&option #:&content #:&content-parser))
 
 (in-package #:arblog)
 
