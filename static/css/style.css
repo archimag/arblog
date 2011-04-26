@@ -5,6 +5,8 @@ body { width: 55em; margin: 0 auto; font-family: Georgia,serif; font-size: 1em; 
 a { color: #06515F; }
 a:hover { color: #6F4706; }
 
+img { border: none; }
+
 .right { float: right; text-align: right; }
 
 h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; font-weight: normal; }
