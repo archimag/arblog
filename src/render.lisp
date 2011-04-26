@@ -32,7 +32,8 @@
          (year (local-time:timestamp-year published))
          (month (local-time:timestamp-month published))
          (day (local-time:timestamp-day published)))
-    (list :title (gethash "title" post)
+    (list :id (gethash "_id" post)
+          :title (gethash "title" post)
           :href (restas:genurl 'one-post
                                :year year
                                :month (format nil "~2,'0D" month)
@@ -51,6 +52,7 @@
 (defmethod render-tagged-data ((type (eql :list-posts-page)) &key posts navigation)
   (arblog.view:show-all-blog-post
    (list :posts (mapcar 'prepare-post-data posts)
+         :disqus (list :shortname *disqus-shortname*)
          :navigation navigation)))
 
 (defmethod render-tagged-data ((type (eql :archive-for-year)) &key year months)
