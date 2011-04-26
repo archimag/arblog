@@ -14,7 +14,11 @@
                href="/feeds/atom" /> 
          <link rel="alternate" type="application/rss+xml"
                title="archimag: comments feed"
-               href="http://archimagblog.disqus.com/latest.rss" /> 
+               href="http://archimagblog.disqus.com/latest.rss" />
+
+         {if $addHead}
+             {$addHead |noAutoescape}
+         {/if}
      </head>
 
      <body>
@@ -234,8 +238,14 @@
 {template post-with-tag-page}
     {call base}
         {param title: 'archimag: ' + $tag /}
+        {param addHead}
+            <link rel="alternate" type="application/rss+xml"
+                  title="All articles, tagged with “{$tag}”"
+                  href="{$atomFeedHref}" />
+        {/param}
+        
         {param content}
-            <h1><a href="{$atomFeedHref}">All articles, tagged with “{$tag}”</a></h1>
+            <h1><a href="{$atomFeedHref}" class="bigfeed">All articles, tagged with “{$tag}”</a></h1>
 
             {foreach $post in $posts}
                 {call show-blog-post data="$post" /}

@@ -8,4 +8,5 @@
             ((:file "defmodule")
              (:file "render" :depends-on ("defmodule"))
              (:file "routes" :depends-on ("render"))
-             (:file "utils" :depends-on "defmodule")))))
+             (:file "markup" :depends-on ("defmodule"))
+             (:file "utils" :depends-on ("routes"))))))

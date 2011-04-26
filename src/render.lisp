@@ -113,7 +113,7 @@
                       (collect
                           (list :id (gethash "_id" post)
                                 :title (gethash "title" post)
-                                :link (restas:genurl 'post-permalink :id (gethash "_id" post))
+                                :link (restas:gen-full-url 'post-permalink :id (gethash "_id" post))
                                 :published (local-time:format-timestring nil (gethash "published" post))
                                 :updated (local-time:format-timestring nil (gethash "updated" post))
                                 :content (gethash "content" post)))))))

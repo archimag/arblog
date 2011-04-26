@@ -31,6 +31,10 @@ h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; f
     background: url("../image/feed-icon-14x14.png") no-repeat 0 50%;
 }
 
+.bigfeed {
+    padding: 0 0 0 33px;
+    background: url("../image/feed-icon-28x28.png") no-repeat 0 50%;
+}
 
 .tag-cloud { font-size: 90%; word-spacing: 0.5em; line-height: 2em;}
 
