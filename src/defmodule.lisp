@@ -23,7 +23,7 @@
 
 (defparameter *disqus-shortname* "archimagblog")
 
-(defparameter *disqus-developer-mode* t)
+(defparameter *disqus-developer-mode* nil)
 
 (defparameter *posts-on-page* 10)
 
