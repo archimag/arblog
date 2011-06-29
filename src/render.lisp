@@ -2,13 +2,6 @@
 
 (in-package #:arblog)
 
-(defclass drawer () ())
-
-(defgeneric render-tagged-data (pagetype &rest args &key &allow-other-keys))
-
-(defmethod restas:render-object ((drawer drawer) (data list))
-  (apply 'render-tagged-data (car data) (cdr data)))
-
 (defun archive-for-year-link (year)
   (list :title year
         :href (restas:genurl 'archive-for-year
@@ -26,6 +19,17 @@
                              :year year
                              :month (format nil "~2,'0D" month)
                              :day (format nil "~2,'0D" day))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass view () ())
+
+(defgeneric render-tagged-data (pagetype &rest args &key &allow-other-keys))
+
+(defmethod restas:render-object ((view view) (data list))
+  (apply 'render-tagged-data (car data) (cdr data)))
 
 (defun prepare-post-data (post)
   (let* ((published (gethash "published" post))

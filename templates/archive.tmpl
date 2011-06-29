@@ -1,0 +1,54 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.view}
+
+{template archiveForYear}
+    {call base}
+        {param title}
+            {nil}archimag: {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$year}</h1>
+            
+            {foreach $month in $months}
+                <div>
+                    <a href="{$month.href}">Archive for {$month.title}, {$year}</a>
+                </div>
+            {/foreach}
+        {/param}
+    {/call}    
+    
+{/template}
+
+{template archiveForMonth}
+    {call base}
+        {param title}
+            {nil}archimag: {$month}, {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}    
+{/template}
+
+{template archiveForDay}
+    {call base}
+        {param title}
+            {nil}archimag: {$day} {$month}, {$year}
+        {/param}
+        {param content}
+            <h1>Archive for {$day} {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}
+    
+{/template}

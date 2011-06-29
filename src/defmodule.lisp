@@ -6,19 +6,14 @@
 
 (in-package #:arblog)
 
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (defparameter *basepath*
-    (make-pathname :directory (pathname-directory (asdf:component-pathname (asdf:find-system '#:arblog))))))
-
-(closure-template:compile-template :common-lisp-backend
- (fad:list-directory (merge-pathnames "templates/" *basepath*)))
-
+(closure-template:compile-cl-templates
+ (fad:list-directory (asdf:system-relative-pathname '#:arblog "templates/")))
 
 (defmethod restas:initialize-module-instance ((module (eql #.*package*)) context)
   (unless (restas:context-symbol-value context '*default-render-method*)
     (restas:context-add-variable context
                                  '*default-render-method*
-                                 (make-instance 'drawer))))
+                                 (make-instance 'view))))
 
 
 (defparameter *disqus-shortname* "archimagblog")

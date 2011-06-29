@@ -1,0 +1,106 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.view}
+
+{template show-blog-post}
+    <div class="blog-post">
+        <h2><a href="{$href}">{$title}</a></h2>
+
+        <div class="post-metadata">
+            <div class="post-published">
+                <a href="{$published.year.href}">
+                    {$published.year.title}
+                </a>,
+
+                <a href="{$published.month.href}">
+                    {$published.month.title}
+                </a>
+
+                <a href="{$published.day.href}">
+                    {$published.day.title}
+                </a>
+            </div>
+
+            <div class="post-tags">
+                <a href="{$allTagsHref}">Tags</a>:
+                {foreach $tag in $tags}
+                    <a href="{$tag.href}">{$tag.name}</a>
+                {/foreach}
+            </div>
+        </div>
+
+        {$content |noAutoescape}
+    </div>
+{/template}
+
+{template show-one-post}
+    {call base}
+        {param title: $title /}
+        {param content}
+            {call show-blog-post data="all" /}
+
+            <div id="disqus_thread"></div>
+            <script type="text/javascript">
+     /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+     var disqus_shortname = "{$disqus.shortname}";
+     var disqus_identifier = "{$disqus.identifier}";
+     var disqus_url = "{$disqus.permalink}";
+     {if $disqus.developerMode}
+         var disqus_developer = 1;
+     {/if}
+
+    // The following are highly recommended additional parameters. Remove the slashes in front to use.
+    // var disqus_identifier = 'unique_dynamic_id_1234';
+    // var disqus_url = 'http://example.com/permalink-to-page.html';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+     {literal}
+     (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+     {/literal}
+                </script>
+            
+                <noscript>
+                    Please enable JavaScript to view the
+                    <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+                </noscript>
+                
+                <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+        {/param}
+    {/call}
+{/template}
+
+{template show-all-blog-post}
+    {call base}
+        {param title: 'archimag' /}
+        {param content}
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+        
+                <a href="{$post.href}#disqus_thread" data-disqus-identifier="{$post.id}"></a>
+            {/foreach}
+
+            {call navigation data="$navigation" /}
+
+            <script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = "{$disqus.shortname}";
+
+    {literal}
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+    {/literal}
+            </script>        
+        {/param}
+    {/call}
+{/template}
+
+

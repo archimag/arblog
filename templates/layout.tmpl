@@ -1,0 +1,88 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.view}
+
+{template base}
+<!DOCTYPE html>{\n}
+ <html>
+     <head>
+         <title>{$title}</title>
+         <link  rel="stylesheet" href="/css/style.css">
+
+         <link rel="alternate" type="application/atom+xml"
+               title="archimag: blog entries feed"
+               href="/feeds/atom" /> 
+         <link rel="alternate" type="application/rss+xml"
+               title="archimag: comments feed"
+               href="http://archimagblog.disqus.com/latest.rss" />
+
+         {if $addHead}
+             {$addHead |noAutoescape}
+         {/if}
+     </head>
+
+     <body>
+         <a href="http://github.com/archimag/">
+             <img style="position: absolute; top: 0; left: 0; border: 0;"
+                  src="http://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"
+                  alt="Fork me on GitHub">
+         </a>
+
+         <div id="header">
+             <a href="/" id="archimag">archimag</a>
+         </div>
+              
+         <div id="content">
+             {$content |noAutoescape}
+         </div>
+
+         <div id="footer">
+             <div class="right">
+                 Copyright (c) Moskvitin Andrey <br />
+                 Powered by
+                 <a href="http://restas.lisper.ru">RESTAS</a>
+
+                 <div id="buttons">
+                     <a href="http://www.sbcl.org/">
+                         <img src="/image/sbclbutton.png" alt="SBCL" />
+                     </a>
+
+                     <a href="http://weitz.de/hunchentoot/">
+                         <img src="/image/hunchentoot10.png" alt="Hunchentoot" />
+                     </a>
+
+                     <a href="http://www.mongodb.org/">
+                         <img src="/image/logo-mongodb.png" alt="mongoDB" />
+                     </a>
+                 </div>
+             </div>
+             
+             <a href="/feeds/atom" class="feed">Posts feed</a>
+             <br />
+             <a href="http://archimagblog.disqus.com/latest.rss" class="feed">Comments feed</a>
+         </div>
+     </body>
+ </html>
+{/template}
+
+{template navigation}
+    {if $newer or $older}
+        <table id="navigation" width="100%">
+            <tbody>
+                <tr>
+                    <td width="50%" align="left">
+                        {if $newer}
+                            <a href="{$newer}" class="left">← Newer posts</a>
+                        {/if}
+                    </td>
+
+                    <td width="50%" align="right">
+                        {if $older}
+                            <a href="{$older}">Older posts →</a>
+                        {/if}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    {/if}
+{/template}

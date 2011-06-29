@@ -5,7 +5,7 @@
 ;;;; static files
 
 (restas:mount-submodule -static- (#:restas.directory-publisher)
-  (restas.directory-publisher:*directory* (merge-pathnames "static/" *basepath*)))
+  (restas.directory-publisher:*directory* (asdf:system-relative-pathname '#:arblog "static/")))
 
 (defmacro with-posts-collection (name &body body)
   (let ((blog-symbol (gensym)))
