@@ -18,11 +18,11 @@
                    "content-rst" rst
                    "content" (render-arblog-markup rst)
                    "tags" (coerce tags 'vector))))
-    (with-posts-collection posts
+    (with-posts-collection (posts *datastore*)
       (mongo:insert-op posts post))))
 
 (defun delete-last-post ()
-  (with-posts-collection posts
+  (with-posts-collection (posts *datastore*)
     (mongo:delete-op posts
                      (mongo:find-one posts
                                      (son "$query" (son) 
@@ -31,7 +31,7 @@
                   
                   
 (defun copy-last-post-to (db)
-  (let ((post (with-posts-collection posts
+  (let ((post (with-posts-collection (posts *datastore*)
                        (mongo:find-one posts
                                        (son "$query" (son) 
                                             "$orderby" (son "published" -1))))))
@@ -39,3 +39,6 @@
           (coerce (gethash "tags" post) 'vector))
     (mongo:insert-op (mongo:collection db "posts")
                      post)))
+
+;;(defun load-new-posts-from (db)
+;;  (let ((posts (mongo:find-list 

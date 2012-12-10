@@ -13,13 +13,22 @@
   (unless (restas:context-symbol-value context '*default-render-method*)
     (restas:context-add-variable context
                                  '*default-render-method*
-                                 (make-instance 'view))))
+                                 (make-instance 'view)))
+  (unless (restas:context-symbol-value context '*datastore*)
+    (restas:context-add-variable context
+                                 '*datastore*
+                                 (make-instance 'arblog-mongo-datastore))))
 
 
 (defparameter *disqus-shortname* "archimagblog")
 
-(defparameter *disqus-developer-mode* nil)
+(defparameter *disqus-developer-mode* t)
 
 (defparameter *posts-on-page* 10)
 
-(defparameter *dbspec* '(:name "blog"))
+(defvar *datastore* nil)
+
+;;;; static files
+
+(restas:mount-submodule -static- (#:restas.directory-publisher)
+  (restas.directory-publisher:*directory* (asdf:system-relative-pathname '#:arblog "static/")))
