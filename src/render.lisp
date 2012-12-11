@@ -31,7 +31,7 @@
 (defmethod restas:render-object ((view view) (data list))
   (apply 'render-tagged-data (car data) (cdr data)))
 
-(defmacro define-view-tagged-data (type (&rest args) &body body)
+(defmacro define-tagged-data-view (type (&rest args) &body body)
   `(defmethod render-tagged-data ((type (eql ,type)) &key ,@args)
      ,@body))
 
@@ -59,44 +59,42 @@
                            :month (archive-for-month-link year month)
                            :day (archive-for-day-link year month day)))))
 
-(defmethod render-tagged-data ((type (eql :list-posts-page)) &key posts navigation)
+(define-tagged-data-view :list-posts-page (posts navigation)
   (arblog.view:show-all-blog-post
    (list :posts (mapcar 'prepare-post-data posts)
          :disqus (list :shortname *disqus-shortname*)
          :navigation navigation)))
 
-(defmethod render-tagged-data ((type (eql :archive-for-year)) &key year months)
+(define-tagged-data-view :archive-for-year (year months)
   (arblog.view:archive-for-year
    (list :year year
          :months (iter (for month in months)
                        (collect (archive-for-month-link year month))))))
 
-(defmethod render-tagged-data ((type (eql :archive-for-month)) &key year month posts)
+(define-tagged-data-view :archive-for-month (year month posts)
   (arblog.view:archive-for-month
    (list :posts (mapcar 'prepare-post-data posts)
          :year year
          :month (svref local-time:+month-names+ month))))
 
-(defmethod render-tagged-data ((type (eql :archive-for-day)) &key year month day posts)
+(define-tagged-data-view :archive-for-day (year month day posts)
   (arblog.view:archive-for-day
    (list :posts (mapcar 'prepare-post-data posts)
          :year year
          :month (svref local-time:+month-names+ month)
          :day day)))  
 
-(defmethod render-tagged-data ((type (eql :one-post-page)) &key post
-                               &aux (id (gethash "_id" post)))
-  (arblog.view:show-one-post (list* :disqus (list :shortname *disqus-shortname*
-                                                  :developer-mode *disqus-developer-mode*
-                                                  :identifier id
-                                                  :permalink (restas:gen-full-url 'post-permalink :id id))
-                                    (prepare-post-data post))))
+(define-tagged-data-view :one-post-page (post)
+  (let ((id (gethash "_id" post)))
+    (arblog.view:show-one-post (list* :disqus (list :shortname *disqus-shortname*
+                                                    :developer-mode *disqus-developer-mode*
+                                                    :identifier id
+                                                    :permalink (restas:gen-full-url 'post-permalink :id id))
+                                      (prepare-post-data post)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Tags
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod render-tagged-data ((type (eql :tags-page)) &key tags)
+(define-tagged-data-view :tags-page (tags)
   (arblog.view:tags-page
    (list :tags
          (iter (for tag in (sort (copy-list tags) #'string< :key #'string-downcase))
@@ -104,18 +102,16 @@
                                                    :tag tag)
                               :name tag))))))
 
-(defmethod render-tagged-data ((type (eql :posts-with-tag-page)) &key tag posts navigation)
+(define-tagged-data-view :posts-with-tag-page (tag posts navigation)
   (arblog.view:post-with-tag-page
    (list :tag tag
          :atom-feed-href (restas:genurl 'posts-with-tag-feed :tag tag)
          :navigation navigation
          :posts (mapcar 'prepare-post-data posts))))
   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Atom
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod render-tagged-data ((type (eql :atom-feed)) &key name href-atom href-html posts)
+(define-tagged-data-view :atom-feed (name href-atom href-html posts)
   (arblog.view:atom-feed
    (list :name name
          :href-atom href-atom
@@ -129,9 +125,7 @@
                                 :updated (local-time:format-timestring nil (gethash "updated" post))
                                 :content (gethash "content" post)))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Admin
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun render-published (published)
   (format nil
@@ -141,7 +135,7 @@
          (local-time:timestamp-day published)))
   
 
-(define-view-tagged-data :admin-posts-page (posts navigation)
+(define-tagged-data-view :admin-posts-page (posts navigation)
   (arblog.view:admin-post-page
    (list :posts (iter (for post in posts)
                       (collect (list :id (gethash "_id" post)
@@ -152,14 +146,14 @@
          :create-post-href (restas:genurl 'admin-create-post))))
 
 
-(define-view-tagged-data :admin-edit-post-page (post)
+(define-tagged-data-view :admin-edit-post-page (post)
   (arblog.view:admin-edit-post-page
    (list :post (prepare-post-data post))))
 
-(define-view-tagged-data :admin-create-post-page ()
+(define-tagged-data-view :admin-create-post-page ()
   (arblog.view:admin-edit-post-page))
 
-(define-view-tagged-data :admin-preview-post-page (title content-rst tags)
+(define-tagged-data-view :admin-preview-post-page (title content-rst tags)
   (arblog.view:admin-edit-post-page
    (list :post (list :title title
                      :content-rst content-rst
