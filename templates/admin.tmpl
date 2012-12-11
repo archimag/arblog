@@ -1,0 +1,82 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.view}
+
+{template adminFrame}
+    <!DOCTYPE html>{\n}
+    <html>
+        <head>
+            <title>{$title}</title>
+        </head>
+
+        <body>
+            {$body |noAutoescape}
+        </body>
+    </html>
+{/template}
+
+{template adminPostPage}
+    {call base}
+        {param title: 'Edit yout posts' /}
+    
+        {param content}
+            {call navigation data="$navigation" /}
+    
+            {foreach $post in $posts}
+                <div class="post">
+                    <div>
+                        <a href="{$post.href}">{$post.title}</a> ({$post.published})
+                    </div>
+                </div>
+            {/foreach}
+
+            <div class="create-post">
+                <a href="{$createPostHref}">Create a new post</a>
+            </div>
+        {/param}
+    {/call}
+{/template}
+
+{template adminEditPostPage}
+    {call base}
+        {param title: 'Edit post' /}
+
+        {param content}
+            <form  method="post" class="edit-post">
+                <div>
+                    <span>Title:</span>
+                    <br />
+                    <input name="title" {if $post}value="{$post.title}{/if}" />
+                </div>
+
+                <div>
+                    <span>Message:</span>
+                    <br />
+                    <textarea rows="30" cols="80" name="content">
+                        {nil}{if $post}{$post.contentRst}{/if}{nil}
+                    </textarea>
+                </div>
+
+                <div>
+                    <span>Tags:</span>
+                    <br />
+                    <input name="tags" {if $post}value="{foreach $tag in $post.tags}{$tag.name}{if not isLast($tag)},{sp}{/if}{/foreach}{/if}" />
+                </div>
+                
+                <div class="edit-buttons">
+                    <input type="submit" value="Save" name="save" />
+                    <input type="submit" value="Preview" name="preview" />
+                    <input type="submit" value="Cancel" name="cancel" />
+                </div>
+            </form>
+
+            {if $preview}
+                <div class="blog-post">
+                    <h2>{$post.title}</h2>
+                    
+                    {$preview |noAutoescape}
+                </div>
+            {/if}
+        {/param}
+    {/call}
+{/template}

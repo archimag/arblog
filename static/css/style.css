@@ -66,3 +66,12 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 .string { color : #777777; background-color : inherit; }
 .character { color : #0055AA; background-color : inherit; }
 .syntaxerror { color : #FF0000; background-color : inherit; }
+
+
+/* Admin */
+
+.edit-post input, .edit-post textarea { width: 100%; }
+.edit-post span { font-weight: bold; }
+.edit-post .edit-buttons { margin-top: 1em; }
+.edit-post .edit-buttons input { width: auto; }
+.create-post { margin-top: 1em; font-weight: bold; }

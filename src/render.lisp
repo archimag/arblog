@@ -31,6 +31,11 @@
 (defmethod restas:render-object ((view view) (data list))
   (apply 'render-tagged-data (car data) (cdr data)))
 
+(defmacro define-view-tagged-data (type (&rest args) &body body)
+  `(defmethod render-tagged-data ((type (eql ,type)) &key ,@args)
+     ,@body))
+
+
 (defun prepare-post-data (post)
   (let* ((published (gethash "published" post))
          (year (local-time:timestamp-year published))
@@ -44,6 +49,7 @@
                                :day (format nil "~2,'0D" day)
                                :title (gethash "title" post))
           :content (gethash "content" post)
+          :content-rst (gethash "content-rst" post)
           :all-tags-href (restas:genurl 'all-tags)
           :tags (iter (for tag in (gethash "tags" post))
                       (collect
@@ -109,7 +115,6 @@
 ;;;; Atom
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defmethod render-tagged-data ((type (eql :atom-feed)) &key name href-atom href-html posts)
   (arblog.view:atom-feed
    (list :name name
@@ -123,3 +128,41 @@
                                 :published (local-time:format-timestring nil (gethash "published" post))
                                 :updated (local-time:format-timestring nil (gethash "updated" post))
                                 :content (gethash "content" post)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Admin
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun render-published (published)
+  (format nil
+          "~A.~A.~A"
+         (local-time:timestamp-year published)
+         (local-time:timestamp-month published)
+         (local-time:timestamp-day published)))
+  
+
+(define-view-tagged-data :admin-posts-page (posts navigation)
+  (arblog.view:admin-post-page
+   (list :posts (iter (for post in posts)
+                      (collect (list :id (gethash "_id" post)
+                                     :title (gethash "title" post)
+                                     :href (restas:genurl 'admin-edit-post :id (gethash "_id" post))
+                                     :published (render-published (gethash "published" post)))))
+         :navigation navigation
+         :create-post-href (restas:genurl 'admin-create-post))))
+
+
+(define-view-tagged-data :admin-edit-post-page (post)
+  (arblog.view:admin-edit-post-page
+   (list :post (prepare-post-data post))))
+
+(define-view-tagged-data :admin-create-post-page ()
+  (arblog.view:admin-edit-post-page))
+
+(define-view-tagged-data :admin-preview-post-page (title content-rst tags)
+  (arblog.view:admin-edit-post-page
+   (list :post (list :title title
+                     :content-rst content-rst
+                     :tags (iter (for tag in tags)
+                                 (collect (list :name tag))))
+         :preview (render-arblog-markup content-rst))))
