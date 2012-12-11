@@ -18,6 +18,8 @@
 {template adminPostPage}
     {call base}
         {param title: 'Edit yout posts' /}
+
+        {param disqus: $disqus /}
     
         {param content}
             {call navigation data="$navigation" /}
@@ -40,6 +42,8 @@
 {template adminEditPostPage}
     {call base}
         {param title: 'Edit post' /}
+
+        {param disqus: $disqus /}
 
         {param content}
             <form  method="post" class="edit-post">

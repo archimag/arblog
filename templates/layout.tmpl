@@ -11,10 +11,13 @@
 
          <link rel="alternate" type="application/atom+xml"
                title="archimag: blog entries feed"
-               href="/feeds/atom" /> 
-         <link rel="alternate" type="application/rss+xml"
-               title="archimag: comments feed"
-               href="http://archimagblog.disqus.com/latest.rss" />
+               href="/feeds/atom" />
+
+         {if $disqus.enabled}
+             <link rel="alternate" type="application/rss+xml"
+                   title="archimag: comments feed"
+                   href="http://archimagblog.disqus.com/latest.rss" />
+         {/if}
 
          {if $addHead}
              {$addHead |noAutoescape}
@@ -58,8 +61,10 @@
              </div>
              
              <a href="/feeds/atom" class="feed">Posts feed</a>
-             <br />
-             <a href="http://archimagblog.disqus.com/latest.rss" class="feed">Comments feed</a>
+             {if $disqus.enabled}
+                 <br />
+                 <a href="http://archimagblog.disqus.com/latest.rss" class="feed">Comments feed</a>
+             {/if}
          </div>
      </body>
  </html>

@@ -62,7 +62,8 @@
 (define-tagged-data-view :list-posts-page (posts navigation)
   (arblog.view:show-all-blog-post
    (list :posts (mapcar 'prepare-post-data posts)
-         :disqus (list :shortname *disqus-shortname*)
+         :disqus (list :enabled *disqus-enabled*
+                       :shortname *disqus-shortname*)
          :navigation navigation)))
 
 (define-tagged-data-view :archive-for-year (year months)
@@ -88,6 +89,7 @@
   (let ((id (gethash "_id" post)))
     (arblog.view:show-one-post (list* :disqus (list :shortname *disqus-shortname*
                                                     :developer-mode *disqus-developer-mode*
+                                                    :enabled *disqus-enabled*
                                                     :identifier id
                                                     :permalink (restas:gen-full-url 'post-permalink :id id))
                                       (prepare-post-data post)))))

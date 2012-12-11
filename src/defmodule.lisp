@@ -19,6 +19,7 @@
                                  '*datastore*
                                  (make-instance 'arblog-mongo-datastore))))
 
+(defparameter *disqus-enabled* nil)
 
 (defparameter *disqus-shortname* "archimagblog")
 

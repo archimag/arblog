@@ -3,10 +3,12 @@
 {namespace arblog.view}
 
 {template archiveForYear}
-    {call base}
+    {call base}        
         {param title}
             {nil}archimag: {$year}
         {/param}
+
+        {param disqus: $disqus /}
 
         {param content}
             <h1>Archive for {$year}</h1>
@@ -27,6 +29,8 @@
             {nil}archimag: {$month}, {$year}
         {/param}
 
+        {param disqus: $disqus /}
+
         {param content}
             <h1>Archive for {$month}, {$year}</h1>
             
@@ -42,6 +46,9 @@
         {param title}
             {nil}archimag: {$day} {$month}, {$year}
         {/param}
+
+        {param disqus: $disqus /}
+        
         {param content}
             <h1>Archive for {$day} {$month}, {$year}</h1>
             

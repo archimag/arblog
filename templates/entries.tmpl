@@ -36,11 +36,13 @@
 {template show-one-post}
     {call base}
         {param title: $title /}
+        {param disqus: $disqus /}
         {param content}
             {call show-blog-post data="all" /}
 
-            <div id="disqus_thread"></div>
-            <script type="text/javascript">
+            {if $disqus.enabled}
+                <div id="disqus_thread"></div>
+                <script type="text/javascript">
      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
      var disqus_shortname = "{$disqus.shortname}";
      var disqus_identifier = "{$disqus.identifier}";
@@ -69,6 +71,7 @@
                 </noscript>
                 
                 <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+            {/if}
         {/param}
     {/call}
 {/template}
@@ -76,6 +79,7 @@
 {template show-all-blog-post}
     {call base}
         {param title: 'archimag' /}
+        {param disqus: $disqus /}
         {param content}
             {foreach $post in $posts}
                 {call show-blog-post data="$post" /}
@@ -85,7 +89,8 @@
 
             {call navigation data="$navigation" /}
 
-            <script type="text/javascript">
+            {if $disqus.enabled}
+                <script type="text/javascript">
     /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
     var disqus_shortname = "{$disqus.shortname}";
 
@@ -98,7 +103,8 @@
         (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
     }());
     {/literal}
-            </script>        
+                </script>
+            {/if}
         {/param}
     {/call}
 {/template}
