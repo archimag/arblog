@@ -1,60 +1,10 @@
-;;;; datastore.lisp
+;;;; mongodb.lisp
 
-(in-package #:arblog)
+(defpackage #:arblog.datastore.mongodb
+  (:use #:cl #:iter #:son-sugar #:arblog.policy.datastore)
+  (:export #:arblog-mongo-datastore))
 
-;;;; Interface
-
-(defmacro define-datastore-method (name (&body args) &optional documentation)
-  (let ((datastore-generic-method (intern (format nil "DATASTORE-~A" name)))
-        (internal-function (intern (format nil "ST.~A" name)))
-        (args-for-call (iter (for item in args)
-                             (with key-args-p = nil)
-                             (unless (member item '(&optional &key))
-                               (when key-args-p
-                                 (collect (intern (symbol-name item) :keyword)))
-                               (collect item))
-                             (when (eql item '&key)
-                               (setf key-args-p t)))))
-  `(progn
-     (defgeneric ,datastore-generic-method (datastore ,@args)
-       ,@(and documentation (list (list :documentation documentation))))
-     (defun ,internal-function (,@args)
-       ,@(and documentation (list documentation))
-       (,datastore-generic-method *datastore* ,@args-for-call)))))
-
-(define-datastore-method count-posts (&optional tag)
-  "Return a count of the posts that are published")
-
-(define-datastore-method list-recent-posts (skip limit &key tag fields)
-  "Retrieve the recent posts.")
-
-(define-datastore-method find-single-post (year month day title)
-  "Retrieve a single post, based on date and post title")
-
-(define-datastore-method get-single-post (id &key fields)
-  "Retrieve a single post, based  on post ID")
-
-(define-datastore-method list-archive-posts (min max &optional fields)
-  "Retrieve archive posts")
-
-(define-datastore-method all-tags ()
-  "Retrieve an array of tags")
-
-(define-datastore-method insert-post (title tags content &key content-rst published updated)
-  "Insert post in the datastore and return the post ID of the created post")
-
-(define-datastore-method update-post (id title tags content &key content-rst)
-  "Update post in the datastore")
-
-(define-datastore-method set-admin (name password)
-  "Set administrator name and password")
-
-(define-datastore-method check-admin (name password)
-  "Check for administrator rights")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; arblog-mongo-datastore
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(in-package #:arblog.datastore.mongodb)
 
 (defclass arblog-mongo-datastore ()
   ((dbspec :initarg :dbspec :initform '(:name "blog") :reader dbspec)))

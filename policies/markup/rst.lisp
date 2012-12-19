@@ -1,6 +1,12 @@
-;;;; markup.lisp
+;;;; rst.lisp
 
-(in-package #:arblog)
+(defpackage #:arblog.markup.rst
+  (:use #:cl #:iter #:arblog.policy.markup)
+  (:import-from #:docutils.parser.rst #:&option #:&content #:&content-parser)
+  (:export #:arblog-rst-markup))
+
+(in-package #:arblog.markup.rst)
+
 
 (defvar *interpreted-roles*
   (alexandria:copy-hash-table docutils.parser.rst::*interpreted-roles*))
@@ -13,13 +19,12 @@
          (docutils.parser.rst::*directives* *directives*))
      ,@body))
 
-
 ;;;; hypespec-ref
 
 (defclass hyperspec-ref (docutils.nodes:raw)
   ((spec :initarg :spec :reader hyperspec-ref-spec)))
 
-(defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node hyperspec-ref))
+(defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node hyperspec-ref))  
   (docutils:part-append
    (docutils.writer.html::start-tag node
                                     "a"
@@ -33,7 +38,23 @@
     (make-instance 'hyperspec-ref
                    :spec spec)))
 
+;;;; cliki-ref
 
+(defclass cliki-ref (docutils.nodes:raw)
+  ((spec :initarg :spec :reader cliki-ref-spec)))
+
+(defmethod docutils:visit-node ((write docutils.writer.html:html-writer) (node cliki-ref))  
+  (docutils:part-append
+   (docutils.writer.html::start-tag node
+                                    "a"
+                                    (list :href (format nil "http://www.cliki.net/~A" (cliki-ref-spec node))))
+   (cliki-ref-spec node)
+   "</a>"))
+
+(with-arblog-markup
+  (docutils.parser.rst:def-role cliki (spec)
+    (make-instance 'cliki-ref
+                   :spec spec)))
 
 ;;;; code-block
 
@@ -58,11 +79,13 @@
                                          :code (docutils::join-strings content #\Newline)))
       (docutils:add-child parent node))))
 
-;;; generate html
+;;; arblog-rst-markup
 
-(defun render-arblog-markup (text)
+(defclass arblog-rst-markup () ())
+
+(defmethod markup-render-content ((markup arblog-rst-markup) content)
   (with-arblog-markup 
-    (let ((doc (docutils:read-rst text))
+    (let ((doc (docutils:read-rst content))
           (writer (make-instance 'docutils.writer.html:html-writer)))
       (docutils:visit-node writer doc)
       (with-output-to-string (out)
@@ -71,5 +94,3 @@
                               docutils.writer.html:body))
               (docutils:write-part writer part out))
         (format out "</div>")))))
-         
-  

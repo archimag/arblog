@@ -1,6 +1,6 @@
 // -*- closure-template-html -*-
 
-{namespace arblog.view}
+{namespace arblog.theme.mirev.tmpl}
 
 {template adminFrame}
     <!DOCTYPE html>{\n}
@@ -16,11 +16,9 @@
 {/template}
 
 {template adminPostPage}
-    {call base}
+    {call arblogHtmlPage data="all"}
         {param title: 'Edit yout posts' /}
 
-        {param disqus: $disqus /}
-    
         {param content}
             {call navigation data="$navigation" /}
     
@@ -40,10 +38,8 @@
 {/template}
 
 {template adminEditPostPage}
-    {call base}
+    {call arblogHtmlPage data="all"}
         {param title: 'Edit post' /}
-
-        {param disqus: $disqus /}
 
         {param content}
             <form  method="post" class="edit-post">

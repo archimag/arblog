@@ -25,8 +25,8 @@
     (list :list-posts-page
           :navigation (navigation (restas:genurl 'entry)
                                   skip
-                                  (st.count-posts))
-          :posts (st.list-recent-posts skip *posts-on-page*))))
+                                  (ds.count-posts))
+          :posts (ds.list-recent-posts skip *posts-on-page*))))
 
 ;;;; One post
 
@@ -35,10 +35,10 @@
                                                  :month #'parse-integer
                                                  :day #'parse-integer))
   (list :one-post-page
-        :post (st.find-single-post year month day title)))
+        :post (ds.find-single-post year month day title)))
 
 (restas:define-route post-permalink ("permalink/posts/:id")
-  (let* ((info (st.get-single-post id :fields '("published" "title")))
+  (let* ((info (ds.get-single-post id :fields '("published" "title")))
          (title (gethash "title" info))
          (published (gethash "published" info)))
     (restas:redirect 'one-post
@@ -53,7 +53,7 @@
                                         :parse-vars (list :year #'parse-integer))
   (let* ((min (local-time:encode-timestamp 0 0 0 0 1 1 year))
          (max (local-time:adjust-timestamp min (offset :year 1)))
-         (posts (st.list-archive-posts min max '("published")))
+         (posts (ds.list-archive-posts min max '("published")))
          (months (make-hash-table)))
     (dolist (post posts)
       (setf (gethash (local-time:timestamp-month (gethash "published" post)) months)
@@ -72,7 +72,7 @@
     (list :archive-for-month
           :year year
           :month month
-          :posts (st.list-archive-posts min max))))
+          :posts (ds.list-archive-posts min max))))
 
 (restas:define-route archive-for-day (":year/:month/:day/"
                                         :parse-vars (list :year #'parse-integer
@@ -84,13 +84,13 @@
           :year year
           :month month
           :day day
-          :posts (st.list-archive-posts min max))))
+          :posts (ds.list-archive-posts min max))))
 
 ;;;; Tags
 
 (restas:define-route all-tags ("tags/")
   (list :tags-page
-        :tags (st.all-tags)))
+        :tags (ds.all-tags)))
                  
 (restas:define-route posts-with-tag ("tags/:tag")
   (let ((skip (or (ignore-errors (parse-integer (hunchentoot:get-parameter "skip"))) 0)))  
@@ -98,8 +98,8 @@
           :tag tag
           :navigation (navigation (restas:genurl 'posts-with-tag :tag tag)
                                   skip
-                                  (st.count-posts tag))
-          :posts (st.list-recent-posts skip
+                                  (ds.count-posts tag))
+          :posts (ds.list-recent-posts skip
                                     *posts-on-page*
                                     :tag tag))))
 
@@ -111,7 +111,7 @@
         :name "archimag"
         :href-atom (restas:gen-full-url 'posts-feed)
         :href-html (restas:gen-full-url 'entry)
-        :posts (st.list-recent-posts 0 50)))
+        :posts (ds.list-recent-posts 0 50)))
 
 (restas:define-route posts-with-tag-feed ("feeds/atom/tag/:tag"
                                           :content-type "application/atom+xml")
@@ -119,7 +119,7 @@
         :name (format nil "archimag blog posts with tag \"~A\"" tag)
         :href-atom (restas:gen-full-url 'posts-feed)
         :href-html (restas:gen-full-url 'entry)
-        :posts (st.list-recent-posts 0 50 :tag tag)))
+        :posts (ds.list-recent-posts 0 50 :tag tag)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Admin
@@ -127,7 +127,7 @@
 
 (defun check-admin-rights ()
   (multiple-value-bind (user password) (hunchentoot:authorization)
-    (or (st.check-admin user password)
+    (or (ds.check-admin user password)
         (hunchentoot:require-authorization))))
 
 (defun form-action-p (method)
@@ -138,11 +138,12 @@
   (iter (for tag in (split-sequence:split-sequence #\, (hunchentoot:post-parameter "tags")))
         (collect (string-trim #(#\Space #\Tab) tag))))
 
-(defun preview-post ()
+(defun preview-post (&aux (content-markup (hunchentoot:post-parameter "content")))
   (list :admin-preview-post-page
         :title (hunchentoot:post-parameter "title")
-        :content-rst (hunchentoot:post-parameter "content")
-        :tags (post-parameter-tags)))
+        :content-rst content-markup
+        :tags (post-parameter-tags)
+        :preview (markup.render-content content-markup)))
 
 ;; main admin page
 
@@ -153,8 +154,8 @@
     (list :admin-posts-page
           :navigation (navigation (restas:genurl 'admin-entry)
                                   skip
-                                  (st.count-posts))
-          :posts (st.list-recent-posts skip *posts-on-page* :fields '("title" "published")))))
+                                  (ds.count-posts))
+          :posts (ds.list-recent-posts skip *posts-on-page* :fields '("title" "published")))))
 
 ;; create post
 
@@ -179,9 +180,9 @@
                                              :requirement (form-action-p "save"))
   (check-admin-rights)
   (let* ((content-rst (hunchentoot:post-parameter "content"))
-        (id (st.insert-post (hunchentoot:post-parameter "title")
+        (id (ds.insert-post (hunchentoot:post-parameter "title")
                             (post-parameter-tags)
-                            (render-arblog-markup content-rst)
+                            (markup.render-content content-rst)
                             :content-rst content-rst)))
     (restas:redirect 'post-permalink :id id)))
                                          
@@ -190,7 +191,7 @@
 (restas:define-route admin-edit-post ("admin/:id")
   (check-admin-rights)
   (list :admin-edit-post-page
-        :post (st.get-single-post id)))
+        :post (ds.get-single-post id)))
 
 (restas:define-route admin-cancel-edit-post ("admin/:id"
                                              :method :post
@@ -211,9 +212,30 @@
                                            :requirement (form-action-p "save"))
   (check-admin-rights)
   (let ((content-rst (hunchentoot:post-parameter "content")))
-    (st.update-post id
+    (ds.update-post id
                     (hunchentoot:post-parameter "title")
                     (post-parameter-tags)
-                    (render-arblog-markup content-rst)
+                    (markup.render-content content-rst)
                     :content-rst content-rst))
   (restas:redirect 'post-permalink :id id))
+
+;;;; static files
+
+;; (restas:mount-submodule -static- (#:restas.directory-publisher)
+;;   (restas.directory-publisher:*directory* (asdf:system-relative-pathname '#:arblog "static/")))
+
+(defun parse-native-namestring (thing)
+  #+sbcl (sb-ext:parse-native-namestring thing)
+  #-sbcl (parse-namestring thing))
+
+(restas:define-route theme-static-file ("/static/:theme/*path")
+  (let* ((theme-path (gethash theme *theme-static-dir-map*))
+         (relative-path (parse-native-namestring (format nil "~{~A~^/~}" path)))
+         (file (merge-pathnames relative-path theme-path)))
+    (when (find :up (pathname-directory relative-path))
+      (restas:abort-route-handler hunchentoot:+http-bad-request+))
+    (unless (fad:file-exists-p file)
+      (restas:abort-route-handler hunchentoot:+http-not-found+))
+    file))
+    
+    

@@ -22,7 +22,7 @@ h1, .blog-post > h2 { font-family: "Liberation Serif","Times New Roman",serif; f
 .post-metadata a:hover { color: #6F4706; }
 
 #header {margin: 2em;}
-#archimag { font-weight: bold; font-size: 2em; text-decoration: none; color: #458b00; }
+#blogname { font-weight: bold; font-size: 2em; text-decoration: none; color: #458b00; }
 
 #footer { margin: 2em 0; color: #767676; }
 #footer a { color: #767676; }

@@ -1,14 +1,12 @@
 // -*- closure-template-html -*-
 
-{namespace arblog.view}
+{namespace arblog.theme.mirev.tmpl}
 
 {template archiveForYear}
-    {call base}        
+    {call arblogHtmlPage data="all"}
         {param title}
-            {nil}archimag: {$year}
+            {nil}{$blogName}: {$year}
         {/param}
-
-        {param disqus: $disqus /}
 
         {param content}
             <h1>Archive for {$year}</h1>
@@ -24,12 +22,10 @@
 {/template}
 
 {template archiveForMonth}
-    {call base}
+    {call arblogHtmlPage data="all"}
         {param title}
-            {nil}archimag: {$month}, {$year}
+            {nil}{$blogName}: {$month}, {$year}
         {/param}
-
-        {param disqus: $disqus /}
 
         {param content}
             <h1>Archive for {$month}, {$year}</h1>
@@ -42,13 +38,11 @@
 {/template}
 
 {template archiveForDay}
-    {call base}
+    {call arblogHtmlPage data="all"}
         {param title}
-            {nil}archimag: {$day} {$month}, {$year}
+            {nil}{$blogName}: {$day} {$month}, {$year}
         {/param}
 
-        {param disqus: $disqus /}
-        
         {param content}
             <h1>Archive for {$day} {$month}, {$year}</h1>
             

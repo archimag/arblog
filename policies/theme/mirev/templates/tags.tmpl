@@ -1,11 +1,11 @@
 // -*- closure-template-html -*-
 
-{namespace arblog.view}
+{namespace arblog.theme.mirev.tmpl}
 
 {template tagsPage}
-    {call base}
-        {param title: 'archimag: Tags' /}
-        {param disqus: $disqus /}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName + ': Tags' /}
+
         {param content}
             <h1>Tags</h1>
 
@@ -19,9 +19,9 @@
 {/template}
 
 {template postWithTagPage}
-    {call base}
-        {param title: 'archimag: ' + $tag /}
-        {param disqus: $disqus /}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName + ': ' + $tag /}
+
         {param addHead}
             <link rel="alternate" type="application/rss+xml"
                   title="All articles, tagged with “{$tag}”"

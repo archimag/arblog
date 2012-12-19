@@ -1,6 +1,6 @@
 // -*- closure-template-html -*-
 
-{namespace arblog.view}
+{namespace arblog.theme.mirev.tmpl}
 
 {template atomFeed}
    {nil}
@@ -20,11 +20,15 @@
                <published>{$entry.published}</published>
                {if $entry.updated}<updated>{$entry.updated}</updated>{/if}
                <content type="html">{$entry.content}</content>
-               <author>
-                   <name>archimag</name>
-                   <uri>http://archimag.lisper.ru/</uri>
-               </author>
+               {call atomEntryAuthor data="all" /}
            </entry>
        {/foreach}
    </feed>
+{/template}
+
+{template atomEntryAuthor}
+    <author>
+        <name>{$blogName}</name>
+        <uri>{$hrefHtml}</uri>
+    </author>
 {/template}

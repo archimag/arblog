@@ -1,7 +1,7 @@
 ;;;; arblog.asd
 
 (defsystem #:arblog
-  :depends-on (#:restas #:mongo-cl-driver #:closure-template #:restas-directory-publisher #:ironclad #:docutils #:colorize)
-  :pathname "src/"
+  :depends-on (#:restas #:closure-template #:restas-directory-publisher )
+  :pathname "core/"
   :serial t
-  :components ((:file "defmodule") (:file "datastore") (:file "markup") (:file "render") (:file "routes")))
+  :components ((:file "defmodule") (:file "view") (:file "routes")))

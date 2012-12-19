@@ -1,0 +1,92 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.theme.mirev.tmpl}
+
+{template arblogHtmlPage}
+<!DOCTYPE html>{\n}
+ <html>
+     <head>
+         <title>{$title}</title>
+
+         {call staticLinks data="all" /}
+
+         {if $addHead}
+             {$addHead |noAutoescape}
+         {/if}
+     </head>
+
+     <body>
+         {call startBody /}
+         
+         <div id="header">
+             {call pageHeader data="all" /}
+         </div>
+              
+         <div id="content">
+             {$content |noAutoescape}
+         </div>
+
+         <div id="footer">
+             {call pageFooter data="all" /}
+         </div>
+
+         {call endBody /}
+     </body>
+ </html>
+{/template}
+
+{template startBody}
+    // start html body
+{/template}
+
+{template endBody}
+    // end html body
+{/template}
+
+{template staticLinks}
+    <link  rel="stylesheet" href="/static/mirev/css/style.css">
+
+    <link rel="alternate" type="application/atom+xml"
+          title="{$blogName}: blog entries feed"
+          href="/feeds/atom" />
+
+    {if $disqus.enabled}
+        <link rel="alternate" type="application/rss+xml"
+              title="{$blogName}: comments feed"
+              href="http://{$disqus.shortname}.disqus.com/latest.rss" />
+    {/if}
+{/template}
+
+{template pageHeader}
+    <a href="/" id="blogname">{$blogName}</a>
+{/template}
+
+{template pageFooter}
+    <a href="/feeds/atom" class="feed">Posts feed</a>
+    {if $disqus.enabled}
+        <br />
+        <a href="http://{$disqus.shortname}.disqus.com/latest.rss" class="feed">Comments feed</a>
+    {/if}
+{/template}
+
+{template navigation}
+    {if $newer or $older}
+        <table id="navigation" width="100%">
+            <tbody>
+                <tr>
+                    <td width="50%" align="left">
+                        {if $newer}
+                            <a href="{$newer}" class="left">← Newer posts</a>
+                        {/if}
+                    </td>
+
+                    <td width="50%" align="right">
+                        {if $older}
+                            <a href="{$older}">Older posts →</a>
+                        {/if}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    {/if}
+{/template}

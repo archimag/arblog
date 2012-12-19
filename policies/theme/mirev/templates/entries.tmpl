@@ -1,6 +1,6 @@
 // -*- closure-template-html -*-
 
-{namespace arblog.view}
+{namespace arblog.theme.mirev.tmpl}
 
 {template show-blog-post}
     <div class="blog-post">
@@ -34,9 +34,8 @@
 {/template}
 
 {template show-one-post}
-    {call base}
+    {call arblogHtmlPage data="all"}
         {param title: $title /}
-        {param disqus: $disqus /}
         {param content}
             {call show-blog-post data="all" /}
 
@@ -77,9 +76,9 @@
 {/template}
 
 {template show-all-blog-post}
-    {call base}
-        {param title: 'archimag' /}
-        {param disqus: $disqus /}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName /}
+
         {param content}
             {foreach $post in $posts}
                 {call show-blog-post data="$post" /}
