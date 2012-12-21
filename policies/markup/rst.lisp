@@ -63,12 +63,20 @@
    (code :initarg :code :initform nil :reader code-block-code)))
 
 (defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node code-block))
-  (docutils:part-append (docutils.writer.html::start-tag node
-                                                         "div"
-                                                         '(:class "code")))
-  (docutils:part-append (colorize::html-colorization :common-lisp
-                                                     (code-block-code node)))
-  (docutils:part-append "</div>"))
+  (let* ((code (code-block-code node))
+         (lang (code-block-lang node))
+         (coloring-type (colorize:find-coloring-type (find-symbol (string-upcase lang) :keyword))))
+    (cond
+      (coloring-type
+       (docutils:part-append
+        (docutils.writer.html::start-tag node "div" '(:class "code")))
+       (docutils:part-append
+        (colorize::html-colorization coloring-type code))
+       (docutils:part-append "</div>"))
+       (t
+        (docutils:part-append (docutils.writer.html::start-tag node "pre"))
+        (docutils:part-append code)
+        (docutils:part-append "</pre>")))))
 
 (with-arblog-markup 
   (docutils.parser.rst:def-directive code-block (parent lang &content content)
