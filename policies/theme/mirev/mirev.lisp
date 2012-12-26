@@ -62,7 +62,7 @@
                                :day (format nil "~2,'0D" day)
                                :title (gethash "title" post))
           :content (gethash "content" post)
-          :content-rst (gethash "content-rst" post)
+          :markup (gethash "markup" post)
           :all-tags-href (restas:genurl 'arblog:all-tags)
           :tags (iter (for tag in (gethash "tags" post))
                       (collect
@@ -149,7 +149,7 @@
 (define-mirev-method theme-admin-edit-post (&key title markup tags preview)
   (render-template admin-edit-post-page
     (list :post (list :title title
-                      :content-rst markup
+                      :markup markup
                       :tags (iter (for tag in tags)
                                   (collect (list :name tag))))
           :preview preview)))

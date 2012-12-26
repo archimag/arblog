@@ -173,11 +173,11 @@
                                              :method :post
                                              :requirement (form-action-p "save"))
   (check-admin-rights)
-  (let* ((content-rst (hunchentoot:post-parameter "content"))
+  (let* ((markup (hunchentoot:post-parameter "content"))
          (id (ds.insert-post (hunchentoot:post-parameter "title")
                              (post-parameter-tags)
-                             (markup.render-content content-rst)
-                             :content-rst content-rst)))
+                             (markup.render-content markup)
+                             :markup markup)))
     (restas:redirect 'post-permalink :id id)))
 
 ;; edit post
@@ -186,9 +186,9 @@
   (check-admin-rights)
   (let ((post (ds.get-single-post id)))
     (render.admin-edit-post :title (gethash "title" post)
-                            :markup (gethash "content-rst" post)
+                            :markup (gethash "markup" post)
                             :tags (gethash "tags" post)
-                            :preview (markup.render-content (gethash "content-rst" post)))))
+                            :preview (markup.render-content (gethash "markup" post)))))
 
 (restas:define-route admin-cancel-edit-post ("admin/:id"
                                              :method :post
@@ -208,12 +208,12 @@
                                            :method :post
                                            :requirement (form-action-p "save"))
   (check-admin-rights)
-  (let ((content-rst (hunchentoot:post-parameter "content")))
+  (let ((markup (hunchentoot:post-parameter "content")))
     (ds.update-post id
                     (hunchentoot:post-parameter "title")
                     (post-parameter-tags)
-                    (markup.render-content content-rst)
-                    :content-rst content-rst))
+                    (markup.render-content markup)
+                    :markup markup))
   (restas:redirect 'post-permalink :id id))
 
 ;;;; static files

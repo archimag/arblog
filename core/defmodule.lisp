@@ -48,10 +48,10 @@
   (define-method all-tags ()
     "Retrieve an array of tags")
 
-  (define-method insert-post (title tags content &key content-rst published updated)
+  (define-method insert-post (title tags content &key markup published updated)
     "Insert post in the datastore and return the post ID of the created post")
 
-  (define-method update-post (id title tags content &key content-rst)
+  (define-method update-post (id title tags content &key markup)
     "Update post in the datastore")
 
   (define-method set-admin (name password)

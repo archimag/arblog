@@ -81,7 +81,7 @@
                 (pushnew tag tags :test #'string=)))
         tags))))
 
-(defmethod datastore-insert-post ((datastore arblog-mongo-datastore) title tags content &key content-rst published updated)
+(defmethod datastore-insert-post ((datastore arblog-mongo-datastore) title tags content &key markup published updated)
   (let* ((now (local-time:now))
          (id (calc-sha1-sum (format nil "~A~A" title published)))
          (post (son "_id" id
@@ -90,9 +90,9 @@
                     "updated" now
                     "content" content
                     "tags" (coerce tags 'vector))))
-    (when content-rst
-      (setf (gethash "content-rst" post)
-            content-rst))
+    (when markup
+      (setf (gethash "markup" post)
+            markup))
     (when published
       (setf (gethash "published" post)
             published))
@@ -103,14 +103,14 @@
       (mongo:insert-op posts post))
     id))
 
-(defmethod datastore-update-post ((datastore arblog-mongo-datastore) id title tags content &key content-rst)
+(defmethod datastore-update-post ((datastore arblog-mongo-datastore) id title tags content &key markup)
   (with-posts-collection (posts datastore)
     (let ((post  (mongo:find-one posts (son "_id" id))))
       (setf (gethash "title" post) title
             (gethash "content" post) content
             (gethash "tags" post) (coerce tags 'vector)
             (gethash "updated" post) (local-time:now)
-            (gethash "content-rst" post) content-rst)
+            (gethash "markup" post) markup)
       (mongo:update-op posts (son "_id" id) post))))
 
 (defmethod datastore-set-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
@@ -142,3 +142,18 @@
 (defun remove-all-posts (datastore)
   (with-posts-collection (posts datastore)
     (mongo:delete-op posts (son))))
+
+;;; upgrade
+
+
+(defun upgrade-datastore (datastore)
+  (flet ((upgrade-post (post)
+           (when (gethash "content-rst" post)
+             (setf (gethash "markup" post)
+                   (gethash "content-rst" post))
+             (remhash "content-rst" post))))
+    (with-posts-collection (posts datastore)
+      (mongo:with-cursor (cursor posts (son))
+        (mongo:docursor (post cursor)
+          (upgrade-post post)
+          (mongo:update-op posts (son "_id" (gethash "_id" post)) post))))))
