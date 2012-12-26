@@ -28,6 +28,5 @@
                                      (:closure-template "entries")
                                      (:closure-template "tags")
                                      (:closure-template "archive")
-                                     (:closure-template "feed")
                                      (:closure-template "admin")))
                (:file "mirev")))

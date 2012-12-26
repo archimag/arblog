@@ -1,7 +1,8 @@
 ;;;; arblog.asd
 
 (defsystem #:arblog
-  :depends-on (#:restas #:closure-template #:restas-directory-publisher )
+  :defsystem-depends-on (#:closure-template)
+  :depends-on (#:restas #:local-time)
   :pathname "core/"
   :serial t
-  :components ((:file "defmodule") (:file "view") (:file "routes")))
+  :components ((:file "defmodule") (:closure-template "feed") (:file "routes")))

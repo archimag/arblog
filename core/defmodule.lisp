@@ -71,10 +71,24 @@
 (restas:define-policy theme
   (:interface-package #:arblog.policy.theme)
   (:interface-method-template "THEME-~A")
-  (:internal-function-template "THEME.~A")
+  (:internal-function-template "RENDER.~A")
 
-  (define-method render-tagged-data (pagetype &key &allow-other-keys)
-    "Generate HTML from tagged data"))
+  (define-method list-recent-posts (posts navigation))
   
+  (define-method archive-for-year (year months))
+  (define-method archive-for-month (year month posts))
+  (define-method archive-for-day (year month day posts))
+  (define-method one-post (post))
+
+  (define-method all-tags (tags))
+  (define-method posts-with-tag (tag posts navigation))
+
+  (define-method admin-posts (posts navigation))
+  (define-method admin-edit-post (&key title markup tags preview)))
 
 
+(defparameter *theme-static-dir-map* (make-hash-table :test 'equal))
+
+(defun register-theme-static-dir (theme-name path)
+  (setf (gethash theme-name *theme-static-dir-map*)
+        path))

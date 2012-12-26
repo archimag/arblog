@@ -20,9 +20,9 @@
 ;;; theme-render-tagged-data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro define-page-view (type (&rest args) &body body)
+(defmacro define-mirev-method (method (&rest args) &body body)
   (alexandria:with-unique-names (tmplname tmplargs theme)
-    `(defmethod theme-render-tagged-data ((,theme arblog-mirev-theme) (type (eql ,type)) &key ,@args)
+    `(defmethod ,method ((,theme arblog-mirev-theme)  ,@args)
        (macrolet ((render-template (,tmplname &body ,tmplargs)
                     `(closure-template:ttable-call-template
                       (closure-template:package-ttable (theme-templates-package ,',theme))
@@ -72,33 +72,34 @@
                            :month (archive-for-month-link year month)
                            :day (archive-for-day-link year month day)))))
 
-(define-page-view :list-posts-page (posts navigation)
+
+(define-mirev-method theme-list-recent-posts (posts navigation)
   (render-template show-all-blog-post
     (list :posts (mapcar 'prepare-post-data posts)
           :disqus (list :enabled arblog:*disqus-enabled*
                         :shortname arblog:*disqus-shortname*)
           :navigation navigation)))
 
-(define-page-view :archive-for-year (year months)
+(define-mirev-method theme-archive-for-year (year months)
   (render-template archive-for-year
     (list :year year
           :months (iter (for month in months)
                         (collect (archive-for-month-link year month))))))
 
-(define-page-view :archive-for-month (year month posts)
+(define-mirev-method theme-archive-for-month (year month posts)
   (render-template archive-for-month
     (list :posts (mapcar 'prepare-post-data posts)
           :year year
           :month (svref local-time:+month-names+ month))))
 
-(define-page-view :archive-for-day (year month day posts)
+(define-mirev-method theme-archive-for-day (year month day posts)
   (render-template archive-for-day
     (list :posts (mapcar 'prepare-post-data posts)
           :year year
           :month (svref local-time:+month-names+ month)
           :day day)))
 
-(define-page-view :one-post-page (post)
+(define-mirev-method theme-one-post (post)
   (let ((id (gethash "_id" post)))
     (render-template show-one-post
       (list* :disqus (list :shortname arblog:*disqus-shortname*
@@ -111,7 +112,7 @@
 
 ;;;; Tags
 
-(define-page-view :tags-page (tags)
+(define-mirev-method theme-all-tags (tags)
   (render-template tags-page
     (list :tags
           (iter (for tag in (sort (copy-list tags) #'string< :key #'string-downcase))
@@ -119,28 +120,12 @@
                                                     :tag tag)
                                :name tag))))))
 
-(define-page-view :posts-with-tag-page (tag posts navigation)
+(define-mirev-method theme-posts-with-tag (tag posts navigation)
   (render-template post-with-tag-page
     (list :tag tag
           :atom-feed-href (restas:genurl 'arblog:posts-with-tag-feed :tag tag)
           :navigation navigation
           :posts (mapcar 'prepare-post-data posts))))
-
-;;;; Atom
-
-(define-page-view :atom-feed (name href-atom href-html posts)
-  (render-template atom-feed
-    (list :name name
-          :href-atom href-atom
-          :href-html href-html
-          :posts (iter (for post in posts)
-                       (collect
-                           (list :id (gethash "_id" post)
-                                 :title (gethash "title" post)
-                                 :link (restas:gen-full-url 'arblog:post-permalink :id (gethash "_id" post))
-                                 :published (local-time:format-timestring nil (gethash "published" post))
-                                 :updated (local-time:format-timestring nil (gethash "updated" post))
-                                 :content (gethash "content" post)))))))
 
 ;;;; Admin
 
@@ -151,7 +136,7 @@
          (local-time:timestamp-month published)
          (local-time:timestamp-day published)))
 
-(define-page-view :admin-posts-page (posts navigation)
+(define-mirev-method theme-admin-posts (posts navigation)
   (render-template admin-post-page
     (list :posts (iter (for post in posts)
                        (collect (list :id (gethash "_id" post)
@@ -161,17 +146,10 @@
           :navigation navigation
           :create-post-href (restas:genurl 'arblog:admin-create-post))))
 
-(define-page-view :admin-edit-post-page (post)
-  (render-template admin-edit-post-page
-    (list :post (prepare-post-data post))))
-
-(define-page-view :admin-create-post-page ()
-  (render-template admin-edit-post-page nil))
-
-(define-page-view :admin-preview-post-page (title content-rst tags preview)
+(define-mirev-method theme-admin-edit-post (&key title markup tags preview)
   (render-template admin-edit-post-page
     (list :post (list :title title
-                      :content-rst content-rst
+                      :content-rst markup
                       :tags (iter (for tag in tags)
                                   (collect (list :name tag))))
           :preview preview)))
