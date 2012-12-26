@@ -30,21 +30,21 @@
 
 ;;;; One post
 
-(restas:define-route one-post (":year/:month/:day/:title"
+(restas:define-route one-post (":year/:month/:day/:urlname"
                                :parse-vars (list :year #'parse-integer
                                                  :month #'parse-integer
                                                  :day #'parse-integer))
-  (render.one-post (ds.find-single-post year month day title)))
+  (render.one-post (ds.find-single-post year month day urlname)))
 
 (restas:define-route post-permalink ("permalink/posts/:id")
-  (let* ((info (ds.get-single-post id :fields '("published" "title")))
-         (title (gethash "title" info))
+  (let* ((info (ds.get-single-post id :fields '("published" "urlname")))
+         (urlname (gethash "title" info))
          (published (gethash "published" info)))
     (restas:redirect 'one-post
                      :year (local-time:timestamp-year published)
                      :month (local-time:timestamp-month published)
                      :day (local-time:timestamp-day published)
-                     :title title)))
+                     :urlname urlname)))
 
 ;;;; archive
 

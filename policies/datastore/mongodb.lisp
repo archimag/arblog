@@ -47,14 +47,14 @@
                      :skip skip
                      :fields (list-fields-query fields))))
   
-(defmethod datastore-find-single-post ((datastore arblog-mongo-datastore) year month day title)
+(defmethod datastore-find-single-post ((datastore arblog-mongo-datastore) year month day urlname)
   (let* ((min (local-time:encode-timestamp 0 0 0 0 day month year))
          (max (local-time:adjust-timestamp min (offset :day 1))))
     (with-posts-collection (posts datastore)
       (mongo:find-one posts
                       (son "published"
                            (son "$gte" min "$lt" max)
-                           "title" title)))))
+                           "urlname" urlname)))))
 
 (defmethod datastore-get-single-post ((datastore arblog-mongo-datastore) id &key fields)
   (with-posts-collection (posts datastore)
@@ -86,6 +86,7 @@
          (id (calc-sha1-sum (format nil "~A~A" title published)))
          (post (son "_id" id
                     "title" title
+                    "ulrname" (arblog:title-to-urlname title)
                     "published" now
                     "updated" now
                     "content" content
@@ -107,6 +108,7 @@
   (with-posts-collection (posts datastore)
     (let ((post  (mongo:find-one posts (son "_id" id))))
       (setf (gethash "title" post) title
+            (gethash "urlname" post) (arblog:title-to-urlname title)
             (gethash "content" post) content
             (gethash "tags" post) (coerce tags 'vector)
             (gethash "updated" post) (local-time:now)
@@ -145,13 +147,14 @@
 
 ;;; upgrade
 
-
 (defun upgrade-datastore (datastore)
   (flet ((upgrade-post (post)
            (when (gethash "content-rst" post)
              (setf (gethash "markup" post)
                    (gethash "content-rst" post))
-             (remhash "content-rst" post))))
+             (remhash "content-rst" post))
+           (setf (gethash "urlname" post)
+                 (arblog:title-to-urlname (gethash "title" post)))))
     (with-posts-collection (posts datastore)
       (mongo:with-cursor (cursor posts (son))
         (mongo:docursor (post cursor)

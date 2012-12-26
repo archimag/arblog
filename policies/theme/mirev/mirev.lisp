@@ -60,7 +60,7 @@
                                :year year
                                :month (format nil "~2,'0D" month)
                                :day (format nil "~2,'0D" day)
-                               :title (gethash "title" post))
+                               :urlname (gethash "urlname" post))
           :content (gethash "content" post)
           :markup (gethash "markup" post)
           :all-tags-href (restas:genurl 'arblog:all-tags)

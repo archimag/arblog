@@ -13,7 +13,9 @@
            #:*posts-on-page*
            #:*blog-name*
 
-           #:register-theme-static-dir))
+           #:register-theme-static-dir
+
+           #:title-to-urlname))
 
 (in-package #:arblog)
 
@@ -36,8 +38,8 @@
   (define-method list-recent-posts (skip limit &key tag fields)
     "Retrieve the recent posts.")
   
-  (define-method find-single-post (year month day title)
-    "Retrieve a single post, based on date and post title")
+  (define-method find-single-post (year month day urlname)
+    "Retrieve a single post, based on date and post urlname")
 
   (define-method get-single-post (id &key fields)
     "Retrieve a single post, based  on post ID")
@@ -92,3 +94,8 @@
 (defun register-theme-static-dir (theme-name path)
   (setf (gethash theme-name *theme-static-dir-map*)
         path))
+
+(defun title-to-urlname (title)
+  (coerce (iter (for ch in-string title)
+                (collect (if (char= ch #\Space) #\_ ch)))
+          'string))
