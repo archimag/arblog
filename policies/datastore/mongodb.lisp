@@ -147,6 +147,12 @@
   (with-posts-collection (posts datastore)
     (mongo:delete-op posts (son))))
 
+(defun remove-last-post (datastore)
+  (with-posts-collection (posts datastore)
+    (mongo:delete-op posts 
+                     (car (datastore-list-recent-posts datastore 0 1 :fields "_id"))
+                     :single-remove t)))
+
 ;;; upgrade
 
 (defun upgrade-datastore (datastore)
