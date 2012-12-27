@@ -128,11 +128,13 @@
 (defmethod datastore-check-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
   (destructuring-bind (&key name hostname port username password) (dbspec datastore)
     (mongo:with-database (db name :hostname hostname :port port :username username :password password)
-      (let ((admin (gethash "info" (mongo:find-one (mongo:collection db "meta") (son "_id" "admin")))))
-        (and (string= (gethash "name" admin) admin-name)
-             (string= (gethash "password" admin) (calc-sha1-sum admin-password)))))))
+      (let ((info (mongo:find-one (mongo:collection db "meta") (son "_id" "admin"))))
+        (when info
+          (let ((admin (gethash "info" info)))
+            (and (string= (gethash "name" admin) admin-name)
+                 (string= (gethash "password" admin) (calc-sha1-sum admin-password)))))))))
 
-;;;  Helpers 
+;;;  Helpers
 
 (defun import-posts-from-datastore (origin target)
   (with-posts-collection (origin-posts origin)
