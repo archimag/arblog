@@ -86,7 +86,7 @@
          (id (calc-sha1-sum (format nil "~A~A" title published)))
          (post (son "_id" id
                     "title" title
-                    "ulrname" (arblog:title-to-urlname title)
+                    "urlname" (arblog:title-to-urlname title)
                     "published" now
                     "updated" now
                     "content" content

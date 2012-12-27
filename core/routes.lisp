@@ -38,7 +38,7 @@
 
 (restas:define-route post-permalink ("permalink/posts/:id")
   (let* ((info (ds.get-single-post id :fields '("published" "urlname")))
-         (urlname (gethash "title" info))
+         (urlname (gethash "urlname" info))
          (published (gethash "published" info)))
     (restas:redirect 'one-post
                      :year (local-time:timestamp-year published)
@@ -178,6 +178,7 @@
                              (post-parameter-tags)
                              (markup.render-content markup)
                              :markup markup)))
+    (break "~A" id)
     (restas:redirect 'post-permalink :id id)))
 
 ;; edit post
