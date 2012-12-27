@@ -16,6 +16,11 @@
   :pathname "policies/markup/"
   :components ((:file "rst")))
 
+(defsystem #:arblog-markup-markdown
+  :depends-on (#:arblog #:cl-markdown)
+  :pathname "policies/markup/"
+  :components ((:file "markdown")))
+
 ;;;; themes
 
 (defsystem #:arblog-theme-mirev
