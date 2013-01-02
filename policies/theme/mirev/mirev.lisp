@@ -33,18 +33,18 @@
 
 (defun archive-for-year-link (year)
   (list :title year
-        :href (restas:genurl 'arblog:archive-for-year
+        :href (restas:genurl 'arblog.public::archive-for-year
                              :year year)))
 
 (defun archive-for-month-link (year month)
   (list :title (svref local-time:+month-names+ month)
-        :href (restas:genurl 'arblog:archive-for-month
+        :href (restas:genurl 'arblog.public::archive-for-month
                              :year year
                              :month (format nil "~2,'0D" month))))
 
 (defun archive-for-day-link (year month day)
   (list :title day
-        :href (restas:genurl 'arblog:archive-for-day
+        :href (restas:genurl 'arblog.public::archive-for-day
                              :year year
                              :month (format nil "~2,'0D" month)
                              :day (format nil "~2,'0D" day))))
@@ -56,18 +56,18 @@
          (day (local-time:timestamp-day published)))
     (list :id (gethash "_id" post)
           :title (gethash "title" post)
-          :href (restas:genurl 'arblog:one-post
+          :href (restas:genurl 'arblog.public::one-post
                                :year year
                                :month (format nil "~2,'0D" month)
                                :day (format nil "~2,'0D" day)
                                :urlname (gethash "urlname" post))
           :content (gethash "content" post)
           :markup (gethash "markup" post)
-          :all-tags-href (restas:genurl 'arblog:all-tags)
+          :all-tags-href (restas:genurl 'arblog.public::all-tags)
           :tags (iter (for tag in (gethash "tags" post))
                       (collect
                           (list :name tag
-                                :href (restas:genurl 'arblog:posts-with-tag :tag tag))))
+                                :href (restas:genurl 'arblog.public::posts-with-tag :tag tag))))
           :published (list :year (archive-for-year-link year)
                            :month (archive-for-month-link year month)
                            :day (archive-for-day-link year month day)))))
@@ -106,7 +106,7 @@
                            :developer-mode arblog:*disqus-developer-mode*
                            :enabled arblog:*disqus-enabled*
                            :identifier id
-                           :permalink (restas:gen-full-url 'post-permalink :id id))
+                           :permalink (restas:genurl* 'arblog.public::post-permalink :id id))
              (prepare-post-data post)))))
 
 
@@ -116,14 +116,14 @@
   (render-template tags-page
     (list :tags
           (iter (for tag in (sort (copy-list tags) #'string< :key #'string-downcase))
-                (collect (list :href (restas:genurl 'arblog:posts-with-tag
+                (collect (list :href (restas:genurl 'arblog.public::posts-with-tag
                                                     :tag tag)
                                :name tag))))))
 
 (define-mirev-method theme-posts-with-tag (tag posts navigation)
   (render-template post-with-tag-page
     (list :tag tag
-          :atom-feed-href (restas:genurl 'arblog:posts-with-tag-feed :tag tag)
+          :atom-feed-href (restas:genurl 'arblog.public::posts-with-tag-feed :tag tag)
           :navigation navigation
           :posts (mapcar 'prepare-post-data posts))))
 
@@ -141,10 +141,10 @@
     (list :posts (iter (for post in posts)
                        (collect (list :id (gethash "_id" post)
                                       :title (gethash "title" post)
-                                      :href (restas:genurl 'arblog:admin-edit-post :id (gethash "_id" post))
+                                      :href (restas:genurl 'arblog.admin::edit-post :id (gethash "_id" post))
                                       :published (render-published (gethash "published" post)))))
           :navigation navigation
-          :create-post-href (restas:genurl 'arblog:admin-create-post))))
+          :create-post-href (restas:genurl 'arblog.admin::create-post))))
 
 (define-mirev-method theme-admin-edit-post (&key title markup tags preview)
   (render-template admin-edit-post-page

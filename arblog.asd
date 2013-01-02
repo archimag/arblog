@@ -5,4 +5,9 @@
   :depends-on (#:restas #:local-time)
   :pathname "core/"
   :serial t
-  :components ((:file "defmodule") (:closure-template "feed") (:file "routes")))
+  :components ((:file "defmodules")
+               (:closure-template "feed")
+               (:file "arblog")
+               (:file "public")
+               (:file "admin")
+               (:file "static")))

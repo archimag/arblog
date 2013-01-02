@@ -2,11 +2,7 @@
 
 (restas:define-module #:arblog
   (:use #:cl #:iter)
-  (:export #:*datastore*
-           #:*markup*
-           #:*theme*
-
-           #:*disqus-enabled*
+  (:export #:*disqus-enabled*
            #:*disqus-shortname*
            #:*disqus-developer-mode*
 
@@ -15,21 +11,14 @@
 
            #:register-theme-static-dir
 
+           #:parse-skip-param
+           #:navigation
            #:title-to-urlname))
 
-(in-package #:arblog)
-
-(defparameter *disqus-enabled* nil)
-(defparameter *disqus-shortname* nil)
-(defparameter *disqus-developer-mode* t)
-
-(defparameter *posts-on-page* 10)
-
-(defparameter *blog-name* "blog")
-
-(restas:define-policy datastore
+(restas:define-policy #:datastore
   (:interface-package #:arblog.policy.datastore)
   (:interface-method-template "DATASTORE-~A")
+  (:internal-package #:arblog.internal.datastore)
   (:internal-function-template "DS.~A")
   
   (define-method count-posts (&optional tag)
@@ -62,17 +51,19 @@
   (define-method check-admin (name password)
     "Check for administrator rights"))
 
-(restas:define-policy markup
+(restas:define-policy #:markup
   (:interface-package #:arblog.policy.markup)
   (:interface-method-template "MARKUP-~A")
+  (:internal-package #:arblog.internal.markup)
   (:internal-function-template "MARKUP.~A")
 
   (define-method render-content (content)
     "Generate HTML from markup"))
 
-(restas:define-policy theme
+(restas:define-policy #:theme
   (:interface-package #:arblog.policy.theme)
   (:interface-method-template "THEME-~A")
+  (:internal-package #:arblog.internal.theme)
   (:internal-function-template "RENDER.~A")
 
   (define-method list-recent-posts (posts navigation))
@@ -89,13 +80,18 @@
   (define-method admin-edit-post (&key title markup tags preview)))
 
 
-(defparameter *theme-static-dir-map* (make-hash-table :test 'equal))
+(restas:define-module #:arblog.public
+  (:use #:cl #:iter #:arblog
+        #:arblog.internal.datastore
+        #:arblog.internal.theme
+        #:arblog.internal.markup))
 
-(defun register-theme-static-dir (theme-name path)
-  (setf (gethash theme-name *theme-static-dir-map*)
-        path))
+(restas:define-module #:arblog.admin
+  (:use #:cl #:iter #:arblog
+        #:arblog.internal.datastore
+        #:arblog.internal.theme
+        #:arblog.internal.markup)
+  (:export #:*post-permalink-route*))
 
-(defun title-to-urlname (title)
-  (coerce (iter (for ch in-string title)
-                (collect (if (char= ch #\Space) #\_ ch)))
-          'string))
+(restas:define-module #:arblog.static
+  (:use #:cl #:iter #:arblog))
