@@ -13,7 +13,9 @@
 
            #:parse-skip-param
            #:navigation
-           #:title-to-urlname))
+           #:title-to-urlname
+
+           #:@admin))
 
 (restas:define-policy #:datastore
   (:interface-package #:arblog.policy.datastore)

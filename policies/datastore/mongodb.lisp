@@ -2,12 +2,17 @@
 
 (defpackage #:arblog.datastore.mongodb
   (:use #:cl #:iter #:son-sugar #:arblog.policy.datastore)
-  (:export #:arblog-mongo-datastore))
+  (:export #:arblog-mongo-datastore #:make-query))
 
 (in-package #:arblog.datastore.mongodb)
 
+(defgeneric make-query (datastore &rest args))
+
 (defclass arblog-mongo-datastore ()
   ((dbspec :initarg :dbspec :initform '(:name "blog") :reader dbspec)))
+
+(defmethod make-query ((datastore arblog-mongo-datastore) &rest args)
+  (apply #'son args))
 
 (defmacro with-posts-collection ((name st) &body body)
   (let ((blog-symbol (gensym)))
@@ -34,14 +39,14 @@
 (defmethod datastore-count-posts ((datastore arblog-mongo-datastore) &optional tag)
   (with-posts-collection (posts datastore)
     (mongo:collection-count posts
-                            (and tag (son "tags" tag)))))
+                            (and tag (make-query datastore "tags" tag)))))
 
 (defmethod datastore-list-recent-posts ((datastore arblog-mongo-datastore) skip limit &key tag fields)
   (with-posts-collection (posts datastore)
     (mongo:find-list posts
                      :query (son "$query" (if tag
-                                              (son "tags" tag)
-                                              (son))
+                                              (make-query datastore "tags" tag)
+                                              (make-query datastore))
                                  "$orderby" (son "published" -1))
                      :limit limit
                      :skip skip
@@ -52,14 +57,14 @@
          (max (local-time:adjust-timestamp min (offset :day 1))))
     (with-posts-collection (posts datastore)
       (mongo:find-one posts
-                      (son "published"
-                           (son "$gte" min "$lt" max)
-                           "urlname" urlname)))))
+                      (make-query datastore
+                                  "published" (son "$gte" min "$lt" max)
+                                  "urlname" urlname)))))
 
 (defmethod datastore-get-single-post ((datastore arblog-mongo-datastore) id &key fields)
   (with-posts-collection (posts datastore)
     (mongo:find-one posts
-                    (son "_id" id)
+                    (make-query datastore "_id" id)
                     (list-fields-query fields))))
   
 
@@ -67,14 +72,14 @@
   (let ((fields-query (list-fields-query fields)))
     (with-posts-collection (posts datastore)
       (mongo:find-list posts
-                       :query (son "$query" (son "published"
-                                                 (son "$gte" min "$lt" max))
+                       :query (son "$query" (make-query datastore
+                                                        "published" (son "$gte" min "$lt" max))
                                    "$orderby" (son "published" -1))
                        :fields fields-query))))
 
 (defmethod datastore-all-tags ((datastore arblog-mongo-datastore))
   (with-posts-collection (posts datastore)
-    (mongo:with-cursor (cursor posts (son) (son "tags" 1))
+    (mongo:with-cursor (cursor posts (make-query datastore) (son "tags" 1))
       (let ((tags nil))
         (mongo:docursor (item cursor)
           (iter (for tag in (gethash "tags" item))
@@ -84,13 +89,14 @@
 (defmethod datastore-insert-post ((datastore arblog-mongo-datastore) title tags content &key markup published updated)
   (let* ((now (local-time:now))
          (id (calc-sha1-sum (format nil "~A~A" title published)))
-         (post (son "_id" id
-                    "title" title
-                    "urlname" (arblog:title-to-urlname title)
-                    "published" now
-                    "updated" now
-                    "content" content
-                    "tags" (coerce tags 'vector))))
+         (post (make-query datastore
+                           "_id" id
+                           "title" title
+                           "urlname" (arblog:title-to-urlname title)
+                           "published" now
+                           "updated" now
+                           "content" content
+                           "tags" (coerce tags 'vector))))
     (when markup
       (setf (gethash "markup" post)
             markup))
@@ -106,7 +112,7 @@
 
 (defmethod datastore-update-post ((datastore arblog-mongo-datastore) id title tags content &key markup)
   (with-posts-collection (posts datastore)
-    (let ((post  (mongo:find-one posts (son "_id" id))))
+    (let ((post (mongo:find-one posts (make-query datastore "_id" id))))
       (setf (gethash "title" post) title
             (gethash "urlname" post) (arblog:title-to-urlname title)
             (gethash "content" post) content
@@ -117,18 +123,19 @@
 
 (defmethod datastore-set-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
   (destructuring-bind (&key name hostname port username password) (dbspec datastore)
-    (mongo:with-database (db name :hostname hostname :port port :username username :password password)
+    (mongo:with-database (db name :hostname hostname :port port :username username :password password)      
       (mongo:update-op (mongo:collection db "meta")
-                       (son "_id" "admin")
-                       (son "_id" "admin"
-                            "info" (son "name" admin-name
-                                        "password" (calc-sha1-sum admin-password)))
+                       (make-query datastore "type" "admin")
+                       (make-query datastore
+                                   "type" "admin"
+                                   "info" (son "name" admin-name
+                                               "password" (calc-sha1-sum admin-password)))
                        :upsert t))))
 
 (defmethod datastore-check-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
   (destructuring-bind (&key name hostname port username password) (dbspec datastore)
     (mongo:with-database (db name :hostname hostname :port port :username username :password password)
-      (let ((info (mongo:find-one (mongo:collection db "meta") (son "_id" "admin"))))
+      (let ((info (mongo:find-one (mongo:collection db "meta") (make-query datastore "type" "admin"))))
         (when info
           (let ((admin (gethash "info" info)))
             (and (string= (gethash "name" admin) admin-name)

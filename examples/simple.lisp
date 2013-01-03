@@ -1,4 +1,4 @@
-;;;; demo.lisp
+;;;; simple.lisp
 
 (asdf:operate 'asdf:load-op '#:arblog)
 (asdf:operate 'asdf:load-op '#:arblog-systems)
