@@ -33,8 +33,8 @@
          (published (gethash "published" info)))
     (restas:redirect 'one-post
                      :year (local-time:timestamp-year published)
-                     :month (local-time:timestamp-month published)
-                     :day (local-time:timestamp-day published)
+                     :month (format nil "~2,'0D" (local-time:timestamp-month published))
+                     :day (format nil "~2,'0D" (local-time:timestamp-day published))
                      :urlname urlname)))
 
 ;; ;;;; archive
