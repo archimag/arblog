@@ -35,3 +35,12 @@
                                      (:closure-template "archive")
                                      (:closure-template "admin")))
                (:file "mirev")))
+
+(defsystem #:arblog-theme-isimple
+  :defsystem-depends-on (#:closure-template)
+  :depends-on (#:arblog)
+  :pathname "policies/theme/isimple/"
+  :serial t
+  :components ((:module "templates"
+                        :components ((:closure-template "isimple")))
+               (:file "isimple")))

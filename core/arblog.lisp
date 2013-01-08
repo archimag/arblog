@@ -9,6 +9,7 @@
 (defparameter *posts-on-page* 10)
 
 (defparameter *blog-name* "blog")
+(defparameter *blog-author* "Unknown")
 
 (defun parse-skip-param ()
   (ignore-errors (parse-integer (hunchentoot:get-parameter "skip"))))

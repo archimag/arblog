@@ -8,6 +8,7 @@
 
            #:*posts-on-page*
            #:*blog-name*
+           #:*blog-author*
 
            #:register-theme-static-dir
 

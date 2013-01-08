@@ -1,0 +1,527 @@
+// -*- closure-template-html -*-
+
+{namespace arblog.theme.isimple.tmpl}
+
+{template arblogHtmlPage} 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+ {\n}
+    <html xmlns="http://www.w3.org/1999/xhtml">
+	    <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <title>{$title}</title>
+
+            {call staticLinks data="all" /}
+
+            {if $addHead}
+                {$addHead |noAutoescape}
+            {/if}
+	    </head>
+        
+	    <body>
+            {call startBody /}
+
+            <div id="wrap">
+                <div id="container">
+            
+                    {call pageHeader data="all" /}
+            
+                    <div id="content">
+                        <div id="main">
+                            {$content |noAutoescape}
+                        </div>
+                        
+                        {call pageSidebar data="all" /}
+                    </div>
+
+
+                    {call pageFooter data="all" /}
+                </div>
+            </div>
+
+            {call endBody /}
+        </body>
+    </html>
+{/template}
+
+{template startBody}
+    // start html body
+{/template}
+
+{template endBody}
+    // end html body
+{/template}
+
+{template staticLinks}
+    <style type="text/css" media="screen">@import url("/static/isimple/css/style.css");</style>
+    <link rel="stylesheet" href="/static/isimple/css/zh_CN.css" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="/static/isimple/css/colorize.css" type="text/css" media="screen"/>
+    <script type="text/javascript" src="/static/isimple/js/util.js"></script>
+{/template}
+
+
+{template pageHeader}
+    <div id="header">
+        <div id="caption">
+            <h1 id="title"><a href="{$indexUrl}">{$blogName}</a></h1>
+            /*<div id="tagline"></div>*/
+        </div>
+
+        /*
+            <div id="searchbox">
+			    <form action="/index" method="get">
+                    <div class="content">
+                        <input type="text" class="textfield" name="s" size="24" value="" />
+                    </div>
+                </form>
+            </div>
+        */
+        
+        <div class="fixed"></div>
+        
+        <div id="navigation">
+            <ul id="menus">
+
+                <li class="current_page_item"><a title="Home page" href="/">Home</a></li>
+                /*<li class="page_item page-item-2"><a title="About page" href="/about">About</a></li>*/
+                <li class="current_page_item"><a class="home" title="Home" href="/">Home</a></li>
+            </ul>
+            <div class="fixed"></div>
+        </div>
+        
+        <div class="fixed"></div>
+    </div>
+{/template}
+
+{template pageFooter}
+    <div id="footer">
+        <a id="gotop" href="#" onclick="MGJS.goTop();return false;">Top</a>
+        <div id="copyright">
+            Copyright &copy; {$blogAuthor}, Powerd by <a href="https://github.com/archimag/arblog">arblog</a>
+        </div>
+	    <div id="themeinfo">
+		    Theme by <a href="http://www.neoease.com/">mg12</a>,
+		    modified by <a href="http://jtsj.net.cn/">Johnny</a>,
+		    ported by Kevin Lynx and Andrey Moskvitin.
+	    </div>
+    </div> 
+{/template}
+
+{template pageSidebar}
+    <div id="sidebar">
+        <div id="northsidebar" class="sidebar">
+            <div class="widget feeds_weight">
+                <div class="content">
+                    <a title="Subscribe to this blog..." class="feedrss" href="/feeds/atom">Subscribe to this blog</a>
+                    <br/>
+                    
+                    {if $atomFeedHref}
+                        <a href="{$atomFeedHref}" class="feedrss">Articles with “{$tag}”</a>
+                        <br/>
+                    {/if}
+                    
+
+                    /*
+                    <div id="feed_readers">
+                        <a class="reader first" title="Subscribe with Google" href="http://fusion.google.com/add?feedurl={$feedurl}">
+                            <img src="/static/isimple/css/img/feed_google.gif" alt="Google"/>
+                        </a>
+                    </div>
+                    */
+                    
+                    <div class="fixed"></div>
+                </div>
+            </div>
+
+            {if $recentPosts}
+                <div class="widget">
+                    <h3>Recent Posts</h3>
+                    <div class="content">
+                        <ul>
+                            {foreach $p in $recentPosts}
+                                <li>
+                                    <a href="{$p.url}">{$p.title}</a>
+                                </li>
+                            {/foreach}
+                            </ul>
+                    </div>
+                    
+                    <div class="columnbot"></div>
+                </div>
+            {/if}
+
+            {if $allTags}
+                <div class="widget">
+                    <h3>Tags</h3>
+                    <div class="content" >
+                        <div style="padding: 6px;">
+                            {foreach $tag in $allTags}
+                                <span>
+                                    <a href="{$tag.href}">{$tag.name}</a>
+                                </span>
+                            {/foreach}
+                            </div>
+                    </div>
+
+                    <div class="columnbot"></div>
+                </div>
+            {/if}
+        </div>
+        
+        <div id="centersidebar" class="sidebar"> </div>
+
+    </div>
+    
+    <div class="fixed"></div>
+{/template}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+{template showBlogPost}    
+    <div class="post">
+        <h2><a class="title" href="{$href}" rel="bookmark">{$title}</a></h2>
+        
+        <div class="info">
+            /*<span class="date">{$createdtime}</span>*/
+            <span class="date">{$published}</span>
+
+            <div class="act">
+                <a href="{$href}#disqus_thread" data-disqus-identifier="{$id}" class="comments">View comments</a>
+                /*
+                <span class="comments"><a href="#comments">View comments</a></span>
+                <span class="addcomment"><a href="#respond">Add comment</a></span>
+                */
+                <div class="fixed"></div>
+            </div>
+            
+            <p class="under">
+                <span class="tags">
+                    {foreach $tag in $tags}
+                        {sp}<a href="{$tag.href}">{$tag.name}</a>
+                    {/foreach}
+                </span>
+            </p>
+            
+            <div class="fixed"></div>
+        </div>
+        
+        <div class="content">
+            {$content | noAutoescape}
+            <div class="fixed"></div>
+        </div>
+    </div>
+
+    /*
+    <div id="postnavi">
+        <span class="prev">
+            {if $prevlink} 
+                <a href="{$prevlink}">Prev: {$prevtitle}</a>
+            {/if}
+            </span>
+        <span class="next">
+            {if $nextlink} 
+                <a href="{$nextlink}">Next: {$nexttitle}</a>
+            {/if}
+            </span>
+        <div class="fixed"></div>
+    </div>
+    */
+{/template}
+
+{template showOnePost}
+    {call arblogHtmlPage data="all"}
+        {param title: $title /}
+        {param content}
+            <div id="postpath">
+                <a title="Home page" href="{$indexUrl}">Home</a> &gt; {$title}
+            </div>
+
+            {call showBlogPost data="all" /}
+
+            {if $disqus.enabled}
+                <div id="disqus_thread"></div>
+                <script type="text/javascript">
+     /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+     var disqus_shortname = "{$disqus.shortname}";
+     var disqus_identifier = "{$disqus.identifier}";
+     var disqus_url = "{$disqus.permalink}";
+     {if $disqus.developerMode}
+         var disqus_developer = 1;
+     {/if}
+
+    // The following are highly recommended additional parameters. Remove the slashes in front to use.
+    // var disqus_identifier = 'unique_dynamic_id_1234';
+    // var disqus_url = 'http://example.com/permalink-to-page.html';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+     {literal}
+     (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+     {/literal}
+                </script>
+            
+                <noscript>
+                    Please enable JavaScript to view the
+                    <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+                </noscript>
+                
+                <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+            {/if}
+        {/param}
+    {/call}
+{/template}
+
+{template showAllBlogPost}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName /}
+
+        {param content}
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}                        
+            {ifempty}
+                <div class="errorbox">Sorry, no posts yet</div>
+            {/foreach}
+
+            /*{call navigation data="$navigation" /}*/
+
+            {if $disqus.enabled}
+                <script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = "{$disqus.shortname}";
+
+    {literal}
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+    {/literal}
+                </script>
+            {/if}
+        {/param}
+    {/call}
+{/template}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// ADMIN
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+{template adminFrame}
+    <!DOCTYPE html>{\n}
+    <html>
+        <head>
+            <title>{$title}</title>
+        </head>
+
+        <body>
+            {$body |noAutoescape}
+        </body>
+    </html>
+{/template}
+
+{template adminArblogHtmlPage} 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+ {\n}
+    <html xmlns="http://www.w3.org/1999/xhtml">
+	    <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <title>{$title}</title>
+
+            {call staticLinks data="all" /}
+
+            {if $addHead}
+                {$addHead |noAutoescape}
+            {/if}
+	    </head>
+        
+	    <body>
+            {call startBody /}
+
+            <div id="wrap">
+                <div id="container">
+            
+                    {call pageHeader data="all" /}
+            
+                    <div id="admincontent">
+                        {$content |noAutoescape}
+                    </div>
+
+                    {call pageFooter data="all" /}
+                </div>
+            </div>
+
+            {call endBody /}
+        </body>
+    </html>
+{/template}
+
+
+{template adminPostPage}
+    {call adminArblogHtmlPage data="all"}
+        {param title: 'Edit yout posts' /}
+
+        {param content}
+            /*{call navigation data="$navigation" /}*/
+    
+            {foreach $post in $posts}
+                <div class="post">
+                    <div>
+                        <a href="{$post.href}">{$post.title}</a> ({$post.published})
+                    </div>
+                </div>
+            {/foreach}
+
+            <div class="create-post">
+                <a href="{$createPostHref}">Create a new post</a>
+            </div>
+        {/param}
+    {/call}
+{/template}
+
+{template adminEditPostPage}
+    {call adminArblogHtmlPage data="all"}
+        {param title: 'Edit post' /}
+
+        {param content}
+            <form  method="post" class="edit-post">
+                <div>
+                    <span>Title:</span>
+                    <br />
+                    <input name="title" {if $post}value="{$post.title}{/if}" />
+                </div>
+
+                <div>
+                    <span>Message:</span>
+                    <br />
+                    <textarea rows="30" cols="80" name="content">
+                        {nil}{if $post}{$post.markup}{/if}{nil}
+                    </textarea>
+                </div>
+
+                <div>
+                    <span>Tags:</span>
+                    <br />
+                    <input name="tags" {if $post}value="{foreach $tag in $post.tags}{$tag.name}{if not isLast($tag)},{sp}{/if}{/foreach}{/if}" />
+                </div>
+                
+                <div class="edit-buttons">
+                    <input type="submit" value="Save" name="save" />
+                    <input type="submit" value="Preview" name="preview" />
+                    <input type="submit" value="Cancel" name="cancel" />
+                </div>
+            </form>
+
+            {if $preview}
+                <div class="post">
+                    <div class="content">
+                        <h2>{$post.title}</h2>
+                        
+                        {$preview |noAutoescape}
+                    </div>
+                </div>
+            {/if}
+        {/param}
+    {/call}
+{/template}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TAGS
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+{template tagsPage}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName + ': Tags' /}
+
+        {param content}
+            <h1>Tags</h1>
+
+            <div class="tag-cloud">
+                {foreach $tag in $tags}
+                    {sp}<a href="{$tag.href}">{$tag.name}</a>
+                {/foreach}
+            </div>
+        {/param}
+    {/call}
+{/template}
+
+{template postWithTagPage}
+    {call arblogHtmlPage data="all"}
+        {param title: $blogName + ': ' + $tag /}
+
+        {param addHead}
+            <link rel="alternate" type="application/rss+xml"
+                  title="All articles, tagged with “{$tag}”"
+                  href="{$atomFeedHref}" />
+        {/param}
+        
+        {param content}
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+
+            /*{call navigation data="$navigation" /}*/
+        {/param}
+    {/call}
+{/template}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// ARCHIVE
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+{template archiveForYear}
+    {call arblogHtmlPage data="all"}
+        {param title}
+            {nil}{$blogName}: {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$year}</h1>
+            
+            {foreach $month in $months}
+                <div>
+                    <a href="{$month.href}">Archive for {$month.title}, {$year}</a>
+                </div>
+            {/foreach}
+        {/param}
+    {/call}    
+    
+{/template}
+
+{template archiveForMonth}
+    {call arblogHtmlPage data="all"}
+        {param title}
+            {nil}{$blogName}: {$month}, {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}    
+{/template}
+
+{template archiveForDay}
+    {call arblogHtmlPage data="all"}
+        {param title}
+            {nil}{$blogName}: {$day} {$month}, {$year}
+        {/param}
+
+        {param content}
+            <h1>Archive for {$day} {$month}, {$year}</h1>
+            
+            {foreach $post in $posts}
+                {call show-blog-post data="$post" /}
+            {/foreach}
+        {/param}
+    {/call}
+    
+{/template}
