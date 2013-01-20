@@ -2,14 +2,14 @@
 
 (in-package #:arblog.public)
 
-(defmethod data-sift:compile-rule ((rule (eql 'year)) &key)
-  (data-sift:compile-rule 'integer))
+(defmethod data-sift:compile-parse-rule ((rule (eql 'year)) &key)
+  (data-sift:compile-parse-rule 'integer))
 
-(defmethod data-sift:compile-rule ((rule (eql 'month)) &key)
-  (data-sift:compile-rule '(integer :min-value 1 :max-value 12)))
+(defmethod data-sift:compile-parse-rule ((rule (eql 'month)) &key)
+  (data-sift:compile-parse-rule '(integer :min-value 1 :max-value 12)))
 
-(defmethod data-sift:compile-rule ((rule (eql 'day)) &key)
-  (data-sift:compile-rule '(integer :min-value 1 :max-value 31)))
+(defmethod data-sift:compile-parse-rule ((rule (eql 'day)) &key)
+  (data-sift:compile-parse-rule '(integer :min-value 1 :max-value 31)))
 
 ;;;; main page
 
