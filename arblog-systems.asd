@@ -5,7 +5,7 @@
 ;;;; datastores
 
 (defsystem #:arblog-datastore-mongodb
-  :depends-on (#:arblog #:mongo-cl-driver #:ironclad)
+  :depends-on (#:arblog #:mongo-cl-driver.usocket #:ironclad)
   :pathname "policies/datastore/"
   :components ((:file "mongodb")))
 

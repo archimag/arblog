@@ -1,7 +1,7 @@
 ;;;; mongodb.lisp
 
 (defpackage #:arblog.datastore.mongodb
-  (:use #:cl #:iter #:son-sugar #:arblog.policy.datastore)
+  (:use #:cl #:iter #:mongo.sugar #:arblog.policy.datastore)
   (:export #:arblog-mongo-datastore #:make-query))
 
 (in-package #:arblog.datastore.mongodb)
@@ -14,14 +14,26 @@
 (defmethod make-query ((datastore arblog-mongo-datastore) &rest args)
   (apply #'son args))
 
-(defmacro with-posts-collection ((name st) &body body)
-  (let ((blog-symbol (gensym)))
-    `(let* ((,blog-symbol (apply 'make-instance 'mongo:database (dbspec ,st)))
-            (,name (mongo:collection ,blog-symbol "posts")))
-       (unwind-protect
-            (progn ,@body)
-         (mongo:close-database ,blog-symbol)))))
+(defmacro with-mongodb ((db datastore) &body body)
+  (alexandria:with-unique-names (dbspec client)
+    `(let ((,dbspec (dbspec ,datastore)))
+       (mongo:with-client (,client (mongo:create-mongo-client :usocket
+                                                              :server (make-instance 'mongo:server-config
+                                                                                     :hostname (getf ,dbspec :hostname)
+                                                                                     :port (getf ,dbspec :port))))
+         (let ((,db (make-instance 'mongo:database
+                                   :mongo-client ,client
+                                   :name (getf ,dbspec :name))))
+           ;; :username (getf ,dbspec :username)
+           ;; :password (getf ,dbspec :password)
+           ,@body)))))
 
+(defmacro with-posts-collection ((name datastore) &body body)
+  (alexandria:with-unique-names (db-symbol)
+    `(with-mongodb (,db-symbol ,datastore)
+       (let ((,name (mongo:collection ,db-symbol "posts")))
+         ,@body))))
+        
 (defun calc-sha1-sum (val)
   "Calc sha1 sum of the val (string)"
   (ironclad:byte-array-to-hex-string
@@ -38,8 +50,8 @@
 
 (defmethod datastore-count-posts ((datastore arblog-mongo-datastore) &optional tag)
   (with-posts-collection (posts datastore)
-    (mongo:collection-count posts
-                            (and tag (make-query datastore "tags" tag)))))
+    (mongo:$count posts
+                  (and tag (make-query datastore "tags" tag)))))
 
 (defmethod datastore-list-recent-posts ((datastore arblog-mongo-datastore) skip limit &key tag fields)
   (with-posts-collection (posts datastore)
@@ -57,15 +69,15 @@
          (max (local-time:adjust-timestamp min (offset :day 1))))
     (with-posts-collection (posts datastore)
       (mongo:find-one posts
-                      (make-query datastore
-                                  "published" (son "$gte" min "$lt" max)
-                                  "urlname" urlname)))))
+                      :query (make-query datastore
+                                         "published" (son "$gte" min "$lt" max)
+                                         "urlname" urlname)))))
 
 (defmethod datastore-get-single-post ((datastore arblog-mongo-datastore) id &key fields)
   (with-posts-collection (posts datastore)
     (mongo:find-one posts
-                    (make-query datastore "_id" id)
-                    (list-fields-query fields))))
+                    :query (make-query datastore "_id" id)
+                    :selector (list-fields-query fields))))
   
 
 (defmethod datastore-list-archive-posts ((datastore arblog-mongo-datastore) min max &optional fields)
@@ -79,12 +91,7 @@
 
 (defmethod datastore-all-tags ((datastore arblog-mongo-datastore))
   (with-posts-collection (posts datastore)
-    (mongo:with-cursor (cursor posts (make-query datastore) (son "tags" 1))
-      (let ((tags nil))
-        (mongo:docursor (item cursor)
-          (iter (for tag in (gethash "tags" item))
-                (pushnew tag tags :test #'string=)))
-        tags))))
+    (mongo:$distinct posts "tags")))
 
 (defmethod datastore-insert-post ((datastore arblog-mongo-datastore) title tags content &key markup published updated)
   (let* ((now (local-time:now))
@@ -112,7 +119,7 @@
 
 (defmethod datastore-update-post ((datastore arblog-mongo-datastore) id title tags content &key markup)
   (with-posts-collection (posts datastore)
-    (let ((post (mongo:find-one posts (make-query datastore "_id" id))))
+    (let ((post (mongo:find-one posts :query (make-query datastore "_id" id))))
       (setf (gethash "title" post) title
             (gethash "urlname" post) (arblog:title-to-urlname title)
             (gethash "content" post) content
@@ -122,24 +129,22 @@
       (mongo:update-op posts (son "_id" id) post))))
 
 (defmethod datastore-set-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
-  (destructuring-bind (&key name hostname port username password) (dbspec datastore)
-    (mongo:with-database (db name :hostname hostname :port port :username username :password password)      
-      (mongo:update-op (mongo:collection db "meta")
-                       (make-query datastore "type" "admin")
-                       (make-query datastore
-                                   "type" "admin"
-                                   "info" (son "name" admin-name
-                                               "password" (calc-sha1-sum admin-password)))
-                       :upsert t))))
+  (with-mongodb (db datastore)
+    (mongo:update-op (mongo:collection db "meta")
+                     (make-query datastore "type" "admin")
+                     (make-query datastore
+                                 "type" "admin"
+                                 "info" (son "name" admin-name
+                                             "password" (calc-sha1-sum admin-password)))
+                     :upsert t)))
 
 (defmethod datastore-check-admin ((datastore arblog-mongo-datastore) admin-name admin-password)
-  (destructuring-bind (&key name hostname port username password) (dbspec datastore)
-    (mongo:with-database (db name :hostname hostname :port port :username username :password password)
-      (let ((info (mongo:find-one (mongo:collection db "meta") (make-query datastore "type" "admin"))))
-        (when info
-          (let ((admin (gethash "info" info)))
-            (and (string= (gethash "name" admin) admin-name)
-                 (string= (gethash "password" admin) (calc-sha1-sum admin-password)))))))))
+  (with-mongodb (db datastore)
+    (let ((info (mongo:find-one (mongo:collection db "meta") :query (make-query datastore "type" "admin"))))
+      (when info
+        (let ((admin (gethash "info" info)))
+          (and (string= (gethash "name" admin) admin-name)
+               (string= (gethash "password" admin) (calc-sha1-sum admin-password))))))))
 
 ;;;  Helpers
 
@@ -175,3 +180,5 @@
         (mongo:docursor (post cursor)
           (upgrade-post post)
           (mongo:update-op posts (son "_id" (gethash "_id" post)) post))))))
+
+
