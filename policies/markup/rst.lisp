@@ -62,21 +62,82 @@
   ((lang :initarg :lang :initform nil :reader code-block-lang)
    (code :initarg :code :initform nil :reader code-block-code)))
 
+(defparameter *span-classes*
+  '("symbol" "special" "keyword" "comment" "string" "character"))
+
+(defun update-code-markup (markup)
+  (labels
+      ((bad-span-p (node)
+         (and (string-equal (xtree:local-name node) "span")
+              (not (member (xtree:attribute-value node "class") *span-classes*
+                           :test #'string-equal))))
+       ;;---------------------------------------
+       (comment-p (node)
+         (and (string-equal (xtree:local-name node) "span")
+              (string-equal (xtree:attribute-value node "class") "comment")))
+       ;;---------------------------------------
+       (br-p (node)
+         (string-equal (xtree:local-name node) "br"))
+       ;;---------------------------------------
+       (flatten-spans (node)
+         (iter (for el in (xtree:all-childs node))
+               (flatten-spans el))
+         ;;---------------------------------------
+         (when (comment-p node)
+           (setf (xtree:text-content node)
+                 (xtree:text-content node))
+           (xtree:insert-child-after (xtree:make-element "br") node))
+         ;;---------------------------------------
+         (when (bad-span-p node)
+           (iter (for el in (xtree:all-childs node))
+                 (xtree:insert-child-before (xtree:detach el) node))
+           (xtree:remove-child node))))
+    ;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    (html:with-parse-html (doc (format nil "<div>~A</div>" markup))
+      (let ((div (xtree:first-child (xtree:first-child (xtree:root doc)))))
+        (flatten-spans div)
+        (xtree:with-object (fragment (xtree:make-document-fragment doc))
+          ;;---------------------------------------
+          (let* ((pre (xtree:make-child-element fragment "div"))
+                 (ol (xtree:make-child-element pre "ol")))
+            (setf (xtree:attribute-value pre "class")
+                  "prettyprint linenums")
+            (setf (xtree:attribute-value ol "class")
+                  "linenums")
+            ;;---------------------------------------
+            (iter (for line in (split-sequence:split-sequence-if #'br-p (xtree:all-childs div)))
+                  (for i from 0)
+                  (let ((li (xtree:make-child-element ol "li")))
+                    (setf (xtree:attribute-value li "class")
+                          (format nil "L~s" i))
+                    ;;---------------------------------------
+                    (iter (for el in line)
+                          (xtree:append-child li (xtree:detach el))))))
+          ;;---------------------------------------
+          (html:serialize-html fragment :to-string))))))
+        
+
 (defmethod docutils:visit-node ((writer docutils.writer.html:html-writer) (node code-block))
   (let* ((code (code-block-code node))
          (lang (code-block-lang node))
          (coloring-type (colorize:find-coloring-type (find-symbol (string-upcase lang) :keyword))))
     (cond
+      ;;---------------------------------------
       (coloring-type
        (docutils:part-append
-        (docutils.writer.html::start-tag node "div" '(:class "code")))
-       (docutils:part-append
-        (colorize::html-colorization coloring-type code))
-       (docutils:part-append "</div>"))
-       (t
-        (docutils:part-append (docutils.writer.html::start-tag node "pre"))
-        (docutils:part-append code)
-        (docutils:part-append "</pre>")))))
+        (update-code-markup (colorize::html-colorization coloring-type code))))
+      ;;---------------------------------------
+      (t
+        (docutils:part-append
+         "<div class=\"prettyprint linenums\">"
+         "<ol class=\"linenums\">")
+        ;;---------------------------------------
+        (iter (for line in (split-sequence:split-sequence #\Newline code))
+              (for i from 0)
+              (docutils:part-append
+               (format nil "<li class=\"L~A\">~A</li>" i line)))
+        ;;---------------------------------------
+        (docutils:part-append "</ol>" "</div>")))))
 
 (with-arblog-markup 
   (docutils.parser.rst:def-directive code-block (parent lang &content content)

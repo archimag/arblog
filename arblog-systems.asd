@@ -12,7 +12,7 @@
 ;;;; markups
 
 (defsystem #:arblog-markup-rst
-  :depends-on (#:arblog #:docutils #:colorize)
+  :depends-on (#:arblog #:docutils #:colorize #:cl-libxml2)
   :pathname "policies/markup/"
   :components ((:file "rst")))
 
